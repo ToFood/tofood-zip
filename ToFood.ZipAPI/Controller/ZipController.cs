@@ -63,7 +63,7 @@ public class ZipController : ControllerBase
             {
                 // Cria o diretório e baixa os executáveis, se necessário
                 Directory.CreateDirectory(defaultFFmpegPath);
-                await DownloadFFmpegExecutablesAsync(defaultFFmpegPath);
+                await DownloadFFmpegExecutables(defaultFFmpegPath);
             }
             catch (Exception ex)
             {
@@ -86,7 +86,7 @@ public class ZipController : ControllerBase
             // Cria capturas de tela a cada segundo
             for (int i = 0; i < videoDuration; i++)
             {
-                var outputImagePath = Path.Combine(outputFolder, $"frame{i:D3}.png");
+                var outputImagePath = Path.Combine(outputFolder, $"frame_{i:D3}.png");
 
                 // Obtém a conversão (sem iniciar)
                 var conversion = await FFmpeg.Conversions.FromSnippet.Snapshot(videoPath, outputImagePath, TimeSpan.FromSeconds(i));
@@ -128,15 +128,24 @@ public class ZipController : ControllerBase
         };
     }
 
+
     /// <summary>
     /// Faz o download e extrai os executáveis do FFmpeg se não estiverem disponíveis localmente.
     /// </summary>
     /// <param name="destinationPath">Caminho onde os executáveis serão extraídos</param>
-    private async Task DownloadFFmpegExecutablesAsync(string destinationPath)
+    private async Task DownloadFFmpegExecutables(string destinationPath)
     {
         // URL oficial para baixar o FFmpeg (versão essencial)
         var ffmpegZipUrl = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip";
         var tempZipPath = Path.Combine(Path.GetTempPath(), "ffmpeg.zip");
+        var tempExtractPath = Path.Combine(Path.GetTempPath(), "ffmpeg_temp");
+
+        // Garante que o diretório de destino está vazio
+        if (Directory.Exists(destinationPath))
+        {
+            Directory.Delete(destinationPath, true);
+        }
+        Directory.CreateDirectory(destinationPath);
 
         // Faz o download do arquivo ZIP contendo os executáveis
         using (var httpClient = new HttpClient())
@@ -153,10 +162,45 @@ public class ZipController : ControllerBase
             }
         }
 
-        // Extrai os executáveis para o destino especificado
-        ZipFile.ExtractToDirectory(tempZipPath, destinationPath, overwriteFiles: true);
+        // Extrai o conteúdo do ZIP para um diretório temporário
+        ZipFile.ExtractToDirectory(tempZipPath, tempExtractPath, overwriteFiles: true);
 
-        // Remove o arquivo ZIP temporário
-        System.IO.File.Delete(tempZipPath);
+        // Obtém o caminho da primeira subpasta dentro do diretório de extração
+        var firstSubFolder = Directory.GetDirectories(tempExtractPath).FirstOrDefault();
+
+        if (string.IsNullOrEmpty(firstSubFolder))
+        {
+            throw new Exception("Nenhuma subpasta encontrada no diretório extraído.");
+        }
+
+        // Caminho da pasta "bin" dentro da primeira subpasta
+        var binPath = Path.Combine(firstSubFolder, "bin");
+
+        if (!Directory.Exists(binPath))
+        {
+            throw new Exception("A pasta 'bin' não foi encontrada na subpasta extraída.");
+        }
+
+        // Copia apenas os executáveis da pasta "bin" para o destino final usando Streams
+        foreach (var file in Directory.EnumerateFiles(binPath))
+        {
+            var fileName = Path.GetFileName(file);
+            var destFile = Path.Combine(destinationPath, fileName);
+
+            // Abre o arquivo de origem para leitura
+            await using (var sourceStream = new FileStream(file, FileMode.Open, FileAccess.Read))
+            {
+                // Abre o arquivo de destino para escrita
+                await using (var destinationStream = new FileStream(destFile, FileMode.Create, FileAccess.Write))
+                {
+                    await sourceStream.CopyToAsync(destinationStream);
+                }
+            }
+        }
+
+        // Remove os diretórios e arquivos temporários
+        Directory.Delete(tempExtractPath, true);
+        //File.Delete(tempZipPath);
     }
+
 }
