@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ToFood.ZipAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+24bd1971088b05c6f883f9fa83d74884553a6499")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+43c0be51944e7598c8379e6541636ca59da0fd3b")]
 [assembly: System.Reflection.AssemblyProductAttribute("ToFood.ZipAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ToFood.ZipAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

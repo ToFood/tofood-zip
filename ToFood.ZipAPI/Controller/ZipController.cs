@@ -76,18 +76,33 @@ public class ZipController : ControllerBase
 
         try
         {
-            // Converte o vídeo em imagens
-            var conversion = await FFmpeg.Conversions.FromSnippet.Snapshot(
-                videoPath,
-                Path.Combine(outputFolder, "frame%03d.png"),
-                TimeSpan.FromSeconds(1) // Extrai uma imagem a cada 1 segundo
-            );
-            await conversion.Start();
+            // Extrai o número total de segundos do vídeo para gerar múltiplas imagens
+            var mediaInfo = await FFmpeg.GetMediaInfo(videoPath);
+            var videoDuration = mediaInfo.VideoStreams.First().Duration.TotalSeconds;
+
+            // Lista para armazenar todas as tarefas de conversão
+            var snapshotTasks = new List<Task>();
+
+            // Cria capturas de tela a cada segundo
+            for (int i = 0; i < videoDuration; i++)
+            {
+                var outputImagePath = Path.Combine(outputFolder, $"frame{i:D3}.png");
+
+                // Obtém a conversão (sem iniciar)
+                var conversion = await FFmpeg.Conversions.FromSnippet.Snapshot(videoPath, outputImagePath, TimeSpan.FromSeconds(i));
+
+                // Adiciona a tarefa de conversão à lista
+                snapshotTasks.Add(conversion.Start());
+            }
+
+            // Aguarda todas as conversões terminarem
+            await Task.WhenAll(snapshotTasks);
         }
         catch (Exception ex)
         {
             return BadRequest($"Erro durante a conversão: {ex.Message}");
         }
+
 
         // Compacta as imagens em um arquivo ZIP
         var zipFilePath = Path.Combine(_outputPath, $"{Path.GetFileNameWithoutExtension(file.FileName)}_{uniqueId}.zip");
