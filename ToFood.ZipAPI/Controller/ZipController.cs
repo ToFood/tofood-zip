@@ -124,7 +124,7 @@ public class ZipController : ControllerBase
         // Retorna o arquivo ZIP para o cliente
         return new FileContentResult(fileBytes, "application/zip")
         {
-            FileDownloadName = $"{Path.GetFileNameWithoutExtension(file.FileName)}.zip"
+            FileDownloadName = $"{Path.GetFileNameWithoutExtension(file.FileName)+".zip"}"
         };
     }
 
