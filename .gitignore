@@ -1,1 +1,61 @@
 .vs
+*.swp
+*.*~
+project.lock.json
+.DS_Store
+*.pyc
+nupkg/
+**.bin/
+
+
+# Visual Studio Code
+.vscode
+
+# Rider
+.idea
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+msbuild.log
+msbuild.err
+msbuild.wrn
+
+# Ignorar diretórios de compilação
+ToFood.ZipAPI/bin/
+ToFood.ZipAPI/bin/Debug
+ToFood.ZipAPI/obj/
+ToFood.ZipAPI/Uploads/
+ToFood.ZipAPI/Output/
+
+# Ignorar arquivos de log
+*.log
+
+# Ignorar configurações do usuário
+*.user
+*.suo
+.vscode/
+
+# Ignorar pacotes NuGet gerados
+*.nupkg
+packages/
+
+# Ignorar arquivos temporários
+*.tmp
+*.temp
+*.cache
