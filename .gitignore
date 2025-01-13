@@ -1,45 +1,54 @@
-.vs
+# Diretórios de configuração do Visual Studio e Rider
+.vs/
+.vscode/
+.idea/
+
+# Arquivos temporários e backups
 *.swp
 *.*~
-project.lock.json
 .DS_Store
-*.pyc
-nupkg/
-**.bin/
 
+# Diretórios de compilação
+**/bin/
+**/obj/
+**/Debug/
+**/Release/
 
-# Visual Studio Code
-.vscode
+# Logs, caches e arquivos temporários
+*.log
+*.tmp
+*.temp
+*.cache
 
-# Rider
-.idea
+# Pacotes e arquivos gerados pelo NuGet
+*.nupkg
+packages/
+project.assets.json
+project.nuget.cache
+*.nuget.dgspec.json
+*.nuget.g.props
+*.nuget.g.targets
 
-# User-specific files
+# Arquivos temporários do MSBuild
+*.CoreCompileInputs.cache
+*.FileListAbsolute.txt
+*.AssemblyReference.cache
+*.GeneratedMSBuildEditorConfig.editorconfig
+
+# Artefatos de build
+*.dll
+*.exe
+*.pdb
+*.json
+*.txt
+*.sourcelink.json
+
+# Arquivos de configuração do usuário
 *.suo
 *.user
 *.userosscache
 *.sln.docstates
 
-# Ignorar diretórios de compilação
-ToFood.ZipAPI/bin/
-ToFood.ZipAPI/bin/Debug
-ToFood.ZipAPI/obj/
+# Diretórios ou arquivos específicos do projeto
 ToFood.ZipAPI/Uploads/
 ToFood.ZipAPI/Output/
-
-# Ignorar arquivos de log
-*.log
-
-# Ignorar configurações do usuário
-*.user
-*.suo
-.vscode/
-
-# Ignorar pacotes NuGet gerados
-*.nupkg
-packages/
-
-# Ignorar arquivos temporários
-*.tmp
-*.temp
-*.cache
