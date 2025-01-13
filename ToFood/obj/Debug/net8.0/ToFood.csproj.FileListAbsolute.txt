@@ -1,0 +1,12 @@
+C:\Users\rober\OneDrive\Documentos\GitHub\tofood-zip-video\ToFood\bin\Debug\net8.0\ToFood.deps.json
+C:\Users\rober\OneDrive\Documentos\GitHub\tofood-zip-video\ToFood\bin\Debug\net8.0\ToFood.dll
+C:\Users\rober\OneDrive\Documentos\GitHub\tofood-zip-video\ToFood\bin\Debug\net8.0\ToFood.pdb
+C:\Users\rober\OneDrive\Documentos\GitHub\tofood-zip-video\ToFood\obj\Debug\net8.0\ToFood.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\rober\OneDrive\Documentos\GitHub\tofood-zip-video\ToFood\obj\Debug\net8.0\ToFood.AssemblyInfoInputs.cache
+C:\Users\rober\OneDrive\Documentos\GitHub\tofood-zip-video\ToFood\obj\Debug\net8.0\ToFood.AssemblyInfo.cs
+C:\Users\rober\OneDrive\Documentos\GitHub\tofood-zip-video\ToFood\obj\Debug\net8.0\ToFood.csproj.CoreCompileInputs.cache
+C:\Users\rober\OneDrive\Documentos\GitHub\tofood-zip-video\ToFood\obj\Debug\net8.0\ToFood.sourcelink.json
+C:\Users\rober\OneDrive\Documentos\GitHub\tofood-zip-video\ToFood\obj\Debug\net8.0\ToFood.dll
+C:\Users\rober\OneDrive\Documentos\GitHub\tofood-zip-video\ToFood\obj\Debug\net8.0\refint\ToFood.dll
+C:\Users\rober\OneDrive\Documentos\GitHub\tofood-zip-video\ToFood\obj\Debug\net8.0\ToFood.pdb
+C:\Users\rober\OneDrive\Documentos\GitHub\tofood-zip-video\ToFood\obj\Debug\net8.0\ref\ToFood.dll
