@@ -49,20 +49,23 @@ public class VideoController : ControllerBase
         }
         finally
         {
-            // Certifica-se de que o arquivo está no diretório Output/Videos
-            var videoDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Output", "Videos");
-            if (videoFilePath.StartsWith(videoDirectory) && System.IO.File.Exists(videoFilePath))
+
+            // Extrai o nome do arquivo (sem extensão) da variável videoFilePath
+            var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(videoFilePath);   
+
+            if (System.IO.File.Exists(videoFilePath))
             {
                 try
                 {
                     System.IO.File.Delete(videoFilePath);
-                    Console.WriteLine($"Arquivo deletado: {videoFilePath}");
+                    Console.WriteLine($"Arquivo deletado: {fileNameWithoutExtension}");
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Erro ao deletar o arquivo: {ex.Message}");
                 }
             }
+
         }
     }
 }

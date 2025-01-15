@@ -2,109 +2,93 @@
 using Microsoft.AspNetCore.Http;
 using Xabe.FFmpeg;
 
-
 namespace ToFood.Domain.Services;
 
 public class ZipService
 {
-
     private readonly string _uploadPath = "Uploads"; // Diretório para armazenar os vídeos enviados
-    private readonly string _outputPath = Path.Combine("Output", "Zips"); // Diretório para armazenar as saídas geradas
+    private readonly string _outputPath = Path.Combine("Output", "Zips"); // Diretório para armazenar os arquivos ZIP gerados
 
     public ZipService()
     {
-        // Garantir que os diretórios de upload e saída existam
+        // Garante que os diretórios de upload e saída existam
         Directory.CreateDirectory(_uploadPath);
         Directory.CreateDirectory(_outputPath);
     }
 
     /// <summary>
-    /// Recebe uma lista de vídeos, converte cada um em imagens (vários frames) e retorna um arquivo ZIP consolidado.
+    /// Recebe uma lista de vídeos, converte cada um em imagens e retorna o caminho do arquivo ZIP consolidado.
     /// </summary>
     /// <param name="files">Lista de arquivos de vídeo enviados pelo usuário.</param>
-    /// <returns>Um arquivo ZIP contendo as imagens extraídas de todos os vídeos.</returns>
-    public async Task<byte[]> ConvertVideosToImageZip(List<IFormFile> files)
+    /// <returns>O caminho do arquivo ZIP consolidado.</returns>
+    public async Task<string> ConvertVideosToImageZipToPath(List<IFormFile> files)
     {
-        // Verifica se há arquivos enviados
         if (files == null || files.Count == 0)
             throw new Exception("Nenhum arquivo foi enviado.");
 
         var tasks = new List<Task<string>>(); // Lista de tarefas para processar cada vídeo
         var processedZips = new List<string>(); // Lista para armazenar os caminhos dos ZIPs gerados
 
-        // Diretório padrão para o FFmpeg
-        var defaultFFmpegPath = Path.Combine(Directory.GetCurrentDirectory(), "ffmpeg_executables");
-
-        // Garante que os executáveis do FFmpeg estejam configurados
-        if (!Directory.Exists(defaultFFmpegPath) || !File.Exists(Path.Combine(defaultFFmpegPath, "ffmpeg.exe")) ||
-            !File.Exists(Path.Combine(defaultFFmpegPath, "ffprobe.exe")))
-        {
-            try
-            {
-                // Atualizaremos a pasta de executáveis FFmpeg
-                await DownloadFFmpegExecutables();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Erro ao configurar os executáveis do FFmpeg: {ex.Message}");
-            }
-        }
-
-        // Configura o FFmpeg para uso
-        FFmpeg.SetExecutablesPath(Path.Combine(Directory.GetCurrentDirectory(), "ffmpeg_executables"));
+        // Verifica e configura os executáveis do FFmpeg
+        await EnsureFFmpegIsConfigured();
 
         foreach (var file in files)
         {
-            tasks.Add(ProcessarVideoAsync(file)); // Adiciona o processamento de cada vídeo como uma tarefa
+            tasks.Add(ProcessarVideoAsync(file));
         }
 
-        try
-        {
-            // Processa todos os vídeos de forma assíncrona
-            processedZips = (await Task.WhenAll(tasks)).ToList();
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Erro ao processar os vídeos: {ex.Message}");
-        }
+        // Processa todos os vídeos de forma assíncrona
+        processedZips = (await Task.WhenAll(tasks)).ToList();
 
+        // Gera um identificador único para o ZIP consolidado
         Guid zipId = Guid.NewGuid();
         var zipDate = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
 
-        // Cria um ZIP consolidado contendo todos os ZIPs individuais
+        // Cria o caminho do arquivo ZIP consolidado
         var consolidatedZipPath = Path.Combine(_outputPath, $"Zip_{zipId}_{zipDate}.zip");
+
+        // Cria o arquivo ZIP consolidado contendo todos os ZIPs individuais
         using (var zipStream = new FileStream(consolidatedZipPath, FileMode.Create))
         {
             using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Create))
             {
                 foreach (var zipPath in processedZips)
                 {
-                    var entryName = Path.GetFileName(zipPath); // Nome do arquivo no ZIP
-                    archive.CreateEntryFromFile(zipPath, entryName); // Adiciona o ZIP individual ao ZIP consolidado
+                    var entryName = Path.GetFileName(zipPath);
+                    archive.CreateEntryFromFile(zipPath, entryName);
                 }
             }
         }
 
-        // Lê o arquivo consolidado para retornar ao cliente
-        var fileBytes = await File.ReadAllBytesAsync(consolidatedZipPath);
-
-        // Remove os arquivos ZIP temporários
+        // Remove os arquivos ZIP temporários gerados
         foreach (var zipPath in processedZips)
         {
             File.Delete(zipPath);
         }
 
-        return fileBytes;
+        return consolidatedZipPath; // Retorna o caminho do ZIP consolidado
+    }
+
+    /// <summary>
+    /// Garante que o FFmpeg esteja configurado e os executáveis estejam disponíveis.
+    /// </summary>
+    private async Task EnsureFFmpegIsConfigured()
+    {
+        var defaultFFmpegPath = Path.Combine(Directory.GetCurrentDirectory(), "ffmpeg_executables");
+        if (!Directory.Exists(defaultFFmpegPath) || !File.Exists(Path.Combine(defaultFFmpegPath, "ffmpeg.exe")) ||
+            !File.Exists(Path.Combine(defaultFFmpegPath, "ffprobe.exe")))
+        {
+            await DownloadFFmpegExecutables();
+        }
+        FFmpeg.SetExecutablesPath(defaultFFmpegPath);
     }
 
     /// <summary>
     /// Processa um único vídeo: converte em imagens e gera um arquivo ZIP.
     /// </summary>
-    /// <param name="file">Arquivo de vídeo enviado.</param>
-    /// <returns>O caminho do arquivo ZIP gerado.</returns>
     private async Task<string> ProcessarVideoAsync(IFormFile file)
     {
-        // Valida o arquivo recebido
+        // Valida o arquivo
         if (file == null || file.Length == 0)
             throw new ArgumentException("Arquivo inválido.");
 
@@ -115,9 +99,9 @@ public class ZipService
             throw new ArgumentException("Formato de vídeo inválido. Aceitamos apenas .mp4, .avi ou .mov.");
         }
 
-        // Define um nome único para o arquivo
+        // Define um nome único para o vídeo
         var uniqueId = Guid.NewGuid().ToString();
-        var videoPath = Path.Combine(_outputPath, $"{uniqueId}{file.FileName}");
+        var videoPath = Path.Combine(_uploadPath, $"{uniqueId}{file.FileName}");
 
         // Salva o vídeo no servidor
         using (var stream = new FileStream(videoPath, FileMode.Create))
@@ -125,17 +109,15 @@ public class ZipService
             await file.CopyToAsync(stream);
         }
 
-        // Define o diretório de saída para as imagens extraídas
-        var outputFolder = Path.Combine(_outputPath, $"{Path.GetFileNameWithoutExtension(file.FileName)}{uniqueId}");
+        // Define o diretório de saída para as imagens
+        var outputFolder = Path.Combine(_outputPath, $"{Path.GetFileNameWithoutExtension(file.FileName)}_{uniqueId}");
         Directory.CreateDirectory(outputFolder);
-
-
 
         // Extrai imagens do vídeo
         var mediaInfo = await FFmpeg.GetMediaInfo(videoPath);
-        var videoDuration = mediaInfo.VideoStreams.First().Duration.TotalSeconds; // Duração total do vídeo
-        var snapshotTasks = new List<Task>(); // Tarefas de captura de frames
+        var videoDuration = mediaInfo.VideoStreams.First().Duration.TotalSeconds;
 
+        var snapshotTasks = new List<Task>();
         for (int i = 0; i < videoDuration; i++)
         {
             var outputImagePath = Path.Combine(outputFolder, $"frame_{i:D3}.png");
@@ -143,24 +125,24 @@ public class ZipService
             snapshotTasks.Add(conversion.Start());
         }
 
-        // Aguarda todas as capturas de frames serem concluídas
         await Task.WhenAll(snapshotTasks);
 
-        // Cria um arquivo ZIP para as imagens extraídas
-        var zipFilePath = Path.Combine(_outputPath, $"{Path.GetFileNameWithoutExtension(file.FileName)}{uniqueId}.zip");
+        // Cria o arquivo ZIP para as imagens
+        var zipFilePath = Path.Combine(_outputPath, $"{Path.GetFileNameWithoutExtension(file.FileName)}_{uniqueId}.zip");
         ZipFile.CreateFromDirectory(outputFolder, zipFilePath);
 
         // Remove arquivos temporários
-        Directory.Delete(outputFolder, true); // Remove o diretório com as imagens
-        File.Delete(videoPath); // Remove o vídeo original
+        Directory.Delete(outputFolder, true);
+        File.Delete(videoPath);
 
-        return zipFilePath; // Retorna o caminho do ZIP gerado
+        return zipFilePath;
     }
 
     /// <summary>
-    /// Faz o download e extrai os executáveis do FFmpeg se não estiverem disponíveis localmente.
+    /// Método para download dos executáveis do FFmpeg (mantém lógica existente)
     /// </summary>
-    /// <param name="destinationPath">Caminho onde os executáveis serão extraídos</param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
     private async Task DownloadFFmpegExecutables()
     {
         // Caminho de destino na raiz do projeto
@@ -233,5 +215,4 @@ public class ZipService
         Directory.Delete(tempExtractPath, true);
         File.Delete(tempZipPath);
     }
-
 }

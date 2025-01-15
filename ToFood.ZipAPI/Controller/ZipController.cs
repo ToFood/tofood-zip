@@ -9,9 +9,9 @@ public class ZipController : ControllerBase
 {
     private readonly ZipService _zipService;
 
-    public ZipController(ZipService zipServices)
+    public ZipController(ZipService zipService)
     {
-        _zipService = zipServices; // Instancia o serviço de processamento de ZIPs
+        _zipService = zipService;
     }
 
     /// <summary>
@@ -22,22 +22,28 @@ public class ZipController : ControllerBase
     [HttpPost("convert-videos-to-images")]
     public async Task<IActionResult> ConvertVideosToImageZip([FromForm] List<IFormFile> files)
     {
+        string zipFilePath = string.Empty;
+
         try
         {
-            // Verifica se os arquivos foram enviados
             if (files == null || files.Count == 0)
                 return BadRequest("Nenhum arquivo foi enviado.");
 
-            // Chama o serviço para processar os vídeos e gerar o ZIP consolidado
-            var zipBytes = await _zipService.ConvertVideosToImageZip(files);
+            // Gera o arquivo ZIP consolidado
+            zipFilePath = await _zipService.ConvertVideosToImageZipToPath(files);
 
-            // Retorna o arquivo ZIP gerado
-            return File(zipBytes, "application/zip", "VideosProcessados.zip");
+            // Lê os bytes do ZIP
+            var zipBytes = await System.IO.File.ReadAllBytesAsync(zipFilePath);
+
+            return File(zipBytes, "application/zip", Path.GetFileName(zipFilePath));
         }
-        catch (Exception ex)
+        finally
         {
-            // Retorna erro detalhado em caso de falha
-            return BadRequest(new { Error = ex.Message });
+            // Remove o ZIP consolidado após a resposta
+            if (!string.IsNullOrEmpty(zipFilePath) && System.IO.File.Exists(zipFilePath))
+            {
+                System.IO.File.Delete(zipFilePath);
+            }
         }
     }
 }
