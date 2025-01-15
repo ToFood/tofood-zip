@@ -7,6 +7,7 @@ namespace ToFood.Domain.Services;
 public class YoutubeService
 {
     private readonly YoutubeClient _youtubeClient;
+    private readonly string _videoOutputPath = Path.Combine("Output", "Videos"); // Diretório para armazenar os vídeos baixados
 
     public YoutubeService()
     {
@@ -22,6 +23,9 @@ public class YoutubeService
         }
 
         FFmpeg.SetExecutablesPath(ffmpegPath);
+
+        // Garante que o diretório de saída para vídeos existe
+        Directory.CreateDirectory(_videoOutputPath);
     }
 
     public async Task<string> DownloadYoutubeVideo(string videoUrl)
@@ -39,6 +43,9 @@ public class YoutubeService
 
         IStreamInfo selectedStream;
 
+        Guid videoId = Guid.NewGuid();
+        var videoDate = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+
         if (muxedStreams.Any())
         {
             // Seleciona a melhor qualidade Muxed disponível
@@ -51,12 +58,12 @@ public class YoutubeService
             var audioOnlyStream = streamManifest.GetAudioOnlyStreams().GetWithHighestBitrate();
 
             if (videoOnlyStream == null || audioOnlyStream == null)
-                throw new Exception("Nenhuma stream de vídeo ou áudio disponível para este vídeo.");
+                throw new Exception("Nenhuma stream de vídeo ou áudio disponível para este vídeo.");           
 
             // Caminho para salvar arquivos temporários
-            var tempVideoPath = Path.Combine(Directory.GetCurrentDirectory(), "temp_video.mp4");
-            var tempAudioPath = Path.Combine(Directory.GetCurrentDirectory(), "temp_audio.mp4");
-            var outputPath = Path.Combine(Directory.GetCurrentDirectory(), $"{GetSafeFileName(videoInfo.Title)}.mp4");
+            var tempVideoPath = Path.Combine(_videoOutputPath, $"video_{videoId}_{videoDate}.mp4");
+            var tempAudioPath = Path.Combine(_videoOutputPath, $"audio_{videoId}_{videoDate}.mp4");
+            var outputPath = Path.Combine(_videoOutputPath, $"{GetSafeFileName(videoInfo.Title)}.mp4");
 
             // Download de streams separadas
             await _youtubeClient.Videos.Streams.DownloadAsync(videoOnlyStream, tempVideoPath);
@@ -73,7 +80,7 @@ public class YoutubeService
         }
 
         // Caminho para salvar o vídeo (caso Muxed esteja disponível)
-        var videoOutputPath = Path.Combine(Directory.GetCurrentDirectory(), $"{GetSafeFileName(videoInfo.Title)}.mp4");
+        var videoOutputPath = Path.Combine(_videoOutputPath, $"{GetSafeFileName(videoInfo.Title)}.mp4");
 
         // Download da stream selecionada
         await _youtubeClient.Videos.Streams.DownloadAsync(selectedStream, videoOutputPath);

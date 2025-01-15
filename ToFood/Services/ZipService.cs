@@ -9,7 +9,7 @@ public class ZipService
 {
 
     private readonly string _uploadPath = "Uploads"; // Diretório para armazenar os vídeos enviados
-    private readonly string _outputPath = "Output"; // Diretório para armazenar as saídas geradas
+    private readonly string _outputPath = Path.Combine("Output", "Zips"); // Diretório para armazenar as saídas geradas
 
     public ZipService()
     {
@@ -68,8 +68,11 @@ public class ZipService
             throw new Exception($"Erro ao processar os vídeos: {ex.Message}");
         }
 
+        Guid zipId = Guid.NewGuid();
+        var zipDate = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+
         // Cria um ZIP consolidado contendo todos os ZIPs individuais
-        var consolidatedZipPath = Path.Combine(_outputPath, $"Consolidado{Guid.NewGuid()}.zip");
+        var consolidatedZipPath = Path.Combine(_outputPath, $"Zip_{zipId}_{zipDate}.zip");
         using (var zipStream = new FileStream(consolidatedZipPath, FileMode.Create))
         {
             using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Create))

@@ -1,5 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.IO;
+using System.Threading.Tasks;
 using ToFood.Domain.Services;
+using ToFood.ZipAPI.DTOs.Requests;
+using ToFood.ZipAPI.DTOs.Responses;
 
 namespace ToFood.ZipAPI.Controllers;
 
@@ -17,17 +21,18 @@ public class VideoController : ControllerBase
     /// <summary>
     /// Recebe uma URL do YouTube, faz o download do vídeo e retorna o arquivo MP4.
     /// </summary>
-    /// <param name="youtubeUrl">A URL do vídeo do YouTube.</param>
+    /// <param name="request">O modelo contendo a URL do vídeo do YouTube.</param>
     /// <returns>O vídeo MP4.</returns>
-    [HttpPost("download")]
-    public async Task<IActionResult> DownloadYoutubeVideo([FromBody] string youtubeUrl)
+    [HttpPost("download/youtube")]
+    public async Task<IActionResult> DownloadYoutubeVideo([FromBody] DownloadYoutubeVideoRequest request)
     {
-        // Faz o download do vídeo
-        var videoFilePath = await _youtubeService.DownloadYoutubeVideo(youtubeUrl);
+        if (string.IsNullOrWhiteSpace(request.YoutubeUrl))
+            return BadRequest(new { Error = "A URL do YouTube não pode ser nula ou vazia." });
+
+        var videoFilePath = await _youtubeService.DownloadYoutubeVideo(request.YoutubeUrl);
 
         try
         {
-
             // Lê o conteúdo do arquivo MP4
             var fileBytes = await System.IO.File.ReadAllBytesAsync(videoFilePath);
 
@@ -36,14 +41,27 @@ public class VideoController : ControllerBase
         }
         catch (Exception ex)
         {
-            return BadRequest(new { Error = ex.Message });
+            return BadRequest(new DownloadYoutubeVideoResponse
+            {
+                FileName = null,
+                Message = $"Erro ao processar o vídeo: {ex.Message}"
+            });
         }
         finally
         {
-            // Opcional: limpa o arquivo baixado após retornar ao cliente
-            if (System.IO.File.Exists(videoFilePath))
+            // Certifica-se de que o arquivo está no diretório Output/Videos
+            var videoDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Output", "Videos");
+            if (videoFilePath.StartsWith(videoDirectory) && System.IO.File.Exists(videoFilePath))
             {
-                System.IO.File.Delete(videoFilePath);
+                try
+                {
+                    System.IO.File.Delete(videoFilePath);
+                    Console.WriteLine($"Arquivo deletado: {videoFilePath}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Erro ao deletar o arquivo: {ex.Message}");
+                }
             }
         }
     }

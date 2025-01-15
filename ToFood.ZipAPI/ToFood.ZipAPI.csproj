@@ -17,4 +17,9 @@
     <ProjectReference Include="..\ToFood\ToFood.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Output\Zips\" />
+    <Folder Include="Output\Videos\" />
+  </ItemGroup>
+
 </Project>
