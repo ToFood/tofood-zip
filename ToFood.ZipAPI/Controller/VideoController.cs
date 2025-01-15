@@ -26,8 +26,8 @@ public class VideoController : ControllerBase
     [HttpPost("download/youtube")]
     public async Task<IActionResult> DownloadYoutubeVideo([FromBody] DownloadYoutubeVideoRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.YoutubeUrl))
-            return BadRequest(new { Error = "A URL do YouTube não pode ser nula ou vazia." });
+        if (string.IsNullOrWhiteSpace(request.YoutubeUrl) || !request.YoutubeUrl.Contains("tube"))
+            return BadRequest(new { Error = "A URL do YouTube está inválida." });
 
         var videoFilePath = await _youtubeService.DownloadYoutubeVideo(request.YoutubeUrl);
 
