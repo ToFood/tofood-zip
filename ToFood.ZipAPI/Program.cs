@@ -3,7 +3,9 @@ using ToFood.Domain.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // DI (Injeção de Dependência)
-builder.Services.AddScoped<ZipServices>();
+builder.Services.AddScoped<ZipService>();
+builder.Services.AddScoped<YoutubeService>();
+
 
 // Adiciona o serviço de CORS
 builder.Services.AddCors(options =>

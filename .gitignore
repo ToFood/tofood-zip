@@ -53,3 +53,4 @@ project.nuget.cache
 ToFood.ZipAPI/Uploads/
 ToFood.ZipAPI/Output/
 /ToFood.ZipAPI/bin/
+/ToFood.ZipAPI/obj/

@@ -5,13 +5,13 @@ using Xabe.FFmpeg;
 
 namespace ToFood.Domain.Services;
 
-public class ZipServices
+public class ZipService
 {
 
     private readonly string _uploadPath = "Uploads"; // Diretório para armazenar os vídeos enviados
     private readonly string _outputPath = "Output"; // Diretório para armazenar as saídas geradas
 
-    public ZipServices()
+    public ZipService()
     {
         // Garantir que os diretórios de upload e saída existam
         Directory.CreateDirectory(_uploadPath);

@@ -7,9 +7,9 @@ namespace ToFood.ZipAPI.Controllers;
 [Route("zip")]
 public class ZipController : ControllerBase
 {
-    private readonly ZipServices _zipService;
+    private readonly ZipService _zipService;
 
-    public ZipController(ZipServices zipServices)
+    public ZipController(ZipService zipServices)
     {
         _zipService = zipServices; // Instancia o serviço de processamento de ZIPs
     }
