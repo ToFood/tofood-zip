@@ -11,7 +11,7 @@
           "Microsoft.AspNetCore.OpenApi": "8.0.5",
           "SharpZipLib": "1.4.2",
           "Swashbuckle.AspNetCore": "6.4.0",
-          "ToFood": "1.0.0",
+          "ToFood.Domain": "1.0.0",
           "Xabe.FFmpeg": "5.2.6"
         },
         "runtime": {
@@ -440,9 +440,9 @@
           }
         }
       },
-      "ToFood/1.0.0": {
+      "ToFood.Domain/1.0.0": {
         "runtime": {
-          "ToFood.dll": {}
+          "ToFood.Domain.dll": {}
         }
       }
     }
@@ -768,7 +768,7 @@
       "path": "xabe.ffmpeg/5.2.6",
       "hashPath": "xabe.ffmpeg.5.2.6.nupkg.sha512"
     },
-    "ToFood/1.0.0": {
+    "ToFood.Domain/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

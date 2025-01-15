@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ToFood\ToFood.csproj" />
+    <ProjectReference Include="..\ToFood\ToFood.Domain.csproj" />
   </ItemGroup>
 
 </Project>
