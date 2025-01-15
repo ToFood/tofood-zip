@@ -1,6 +1,9 @@
+using ToFood.Domain.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Configuração de serviços
+// DI (Injeção de Dependência)
+builder.Services.AddScoped<ZipServices>();
 
 // Adiciona o serviço de CORS
 builder.Services.AddCors(options =>

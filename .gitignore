@@ -52,3 +52,4 @@ project.nuget.cache
 # Diretórios ou arquivos específicos do projeto
 ToFood.ZipAPI/Uploads/
 ToFood.ZipAPI/Output/
+/ToFood.ZipAPI/bin/
