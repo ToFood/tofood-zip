@@ -33,17 +33,16 @@ public class ZipServices
         var processedZips = new List<string>(); // Lista para armazenar os caminhos dos ZIPs gerados
 
         // Diretório padrão para o FFmpeg
-        var defaultFFmpegPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ffmpeg_executables");
+        var defaultFFmpegPath = Path.Combine(Directory.GetCurrentDirectory(), "ffmpeg_executables");
 
-        // Garante que os executáveis do FFmpeg estão configurados
+        // Garante que os executáveis do FFmpeg estejam configurados
         if (!Directory.Exists(defaultFFmpegPath) || !File.Exists(Path.Combine(defaultFFmpegPath, "ffmpeg.exe")) ||
             !File.Exists(Path.Combine(defaultFFmpegPath, "ffprobe.exe")))
         {
             try
             {
-                // Cria o diretório e baixa os executáveis, se necessário
-                Directory.CreateDirectory(defaultFFmpegPath);
-                await DownloadFFmpegExecutables(defaultFFmpegPath);
+                // Atualizaremos a pasta de executáveis FFmpeg
+                await DownloadFFmpegExecutables();
             }
             catch (Exception ex)
             {
@@ -52,7 +51,7 @@ public class ZipServices
         }
 
         // Configura o FFmpeg para uso
-        FFmpeg.SetExecutablesPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ffmpeg_executables"));
+        FFmpeg.SetExecutablesPath(Path.Combine(Directory.GetCurrentDirectory(), "ffmpeg_executables"));
 
         foreach (var file in files)
         {
@@ -159,18 +158,21 @@ public class ZipServices
     /// Faz o download e extrai os executáveis do FFmpeg se não estiverem disponíveis localmente.
     /// </summary>
     /// <param name="destinationPath">Caminho onde os executáveis serão extraídos</param>
-    private async Task DownloadFFmpegExecutables(string destinationPath)
+    private async Task DownloadFFmpegExecutables()
     {
+        // Caminho de destino na raiz do projeto
+        var destinationPath = Path.Combine(Directory.GetCurrentDirectory(), "ffmpeg_executables");
+
         // URL oficial para baixar o FFmpeg (versão essencial)
         var ffmpegZipUrl = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip";
         var tempZipPath = Path.Combine(Path.GetTempPath(), "ffmpeg.zip");
         var tempExtractPath = Path.Combine(Path.GetTempPath(), "ffmpeg_temp");
 
         // Garante que o diretório de destino está vazio
-        //if (Directory.Exists(destinationPath))
-        //{
-        //    Directory.Delete(destinationPath, true);
-        //}
+        if (Directory.Exists(destinationPath))
+        {
+            Directory.Delete(destinationPath, true);
+        }
         Directory.CreateDirectory(destinationPath);
 
         // Faz o download do arquivo ZIP contendo os executáveis
@@ -226,6 +228,7 @@ public class ZipServices
 
         // Remove os diretórios e arquivos temporários
         Directory.Delete(tempExtractPath, true);
-        //File.Delete(tempZipPath);
+        File.Delete(tempZipPath);
     }
+
 }
