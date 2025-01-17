@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ToFood.Domain.DB.Relational;
 using ToFood.Domain.DB.NonRelational;
+using ToFood.Domain.DB.Relational.PostgreSQL;
 
 namespace ToFood.Domain.Factories;
 

@@ -34,7 +34,6 @@ public class ToFoodRelationalContext : DbContext
             entity.Property(u => u.PasswordHash).HasMaxLength(255);
             entity.Property(u => u.CreatedAt).IsRequired();
         });
-
-        // Adicione configurações para outras entidades aqui
+  
     }
 }

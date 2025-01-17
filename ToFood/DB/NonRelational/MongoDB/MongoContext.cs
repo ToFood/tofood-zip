@@ -1,7 +1,7 @@
 ﻿using MongoDB.Driver;
 using ToFood.Domain.Entities.NonRelational;
 
-namespace ToFood.Domain.DB.NonRelational;
+namespace ToFood.Domain.DB.NonRelational.MongoDB;
 
 /// <summary>
 /// Contexto para interagir com o banco de dados MongoDB.

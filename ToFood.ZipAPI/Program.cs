@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using ToFood.Domain.Factories;    // Para DatabaseFactory
+using ToFood.Domain.Factories;
 using ToFood.Domain.Services;
 
 var builder = WebApplication.CreateBuilder(args);

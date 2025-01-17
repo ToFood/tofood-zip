@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace ToFood.Domain.DB.Relational;
+namespace ToFood.Domain.DB.Relational.PostgreSQL;
 
 /// <summary>
 /// Contexto específico para PostgreSQL.
