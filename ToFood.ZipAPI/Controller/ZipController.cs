@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ToFood.Domain.Services;
 
 namespace ToFood.ZipAPI.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("zip")]
 public class ZipController : ControllerBase
 {
