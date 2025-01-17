@@ -1,11 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.IO;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ToFood.Domain.Services;
 using ToFood.ZipAPI.DTOs.Requests;
 using ToFood.ZipAPI.DTOs.Responses;
 
-namespace ToFood.ZipAPI.Controllers;
+namespace ToFood.ZipAPI.Controller;
 
 [ApiController]
 [Route("videos")]
@@ -24,6 +23,7 @@ public class VideoController : ControllerBase
     /// <param name="request">O modelo contendo a URL do vídeo do YouTube.</param>
     /// <returns>O vídeo MP4.</returns>
     [HttpPost("download/youtube")]
+    [AllowAnonymous]
     public async Task<IActionResult> DownloadYoutubeVideo([FromBody] DownloadYoutubeVideoRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.YoutubeUrl) || !request.YoutubeUrl.Contains("tube"))
@@ -51,7 +51,7 @@ public class VideoController : ControllerBase
         {
 
             // Extrai o nome do arquivo (sem extensão) da variável videoFilePath
-            var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(videoFilePath);   
+            var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(videoFilePath);
 
             if (System.IO.File.Exists(videoFilePath))
             {

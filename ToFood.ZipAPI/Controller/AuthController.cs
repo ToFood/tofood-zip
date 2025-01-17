@@ -1,108 +1,70 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using BCrypt.Net;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using ToFood.Domain.Services;
 
 [ApiController]
-[Route("api/auth")]
+[Route("auth")]
 public class AuthController : ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly AuthService _authService;
 
-    public AuthController(AppDbContext context)
+    /// <summary>
+    /// Inicializa uma nova instância do AuthController com o serviço de autenticação.
+    /// </summary>
+    /// <param name="authService">O serviço responsável por operações de autenticação.</param>
+    public AuthController(AuthService authService)
     {
-        _context = context;
+        _authService = authService;
     }
 
+    /// <summary>
+    /// Endpoint para registrar um novo usuário.
+    /// </summary>
+    /// <param name="email">O email do usuário a ser registrado.</param>
+    /// <param name="password">A senha do usuário a ser registrado.</param>
+    /// <returns>Uma resposta indicando o sucesso ou falha do registro.</returns>
     [HttpPost("register")]
     public async Task<IActionResult> Register(string email, string password)
     {
-        if (await _context.Users.AnyAsync(u => u.Email == email))
-        {
-            return BadRequest("Email já está em uso.");
-        }
+        var response = await _authService.Register(email, password);
 
-        var passwordHash = BCrypt.Net.BCrypt.HashPassword(password);
+        if (!response.IsSuccess)
+            return BadRequest(response.Message); // Retorna um erro se o registro falhar
 
-        var user = new User
-        {
-            Email = email,
-            PasswordHash = passwordHash
-        };
-
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-
-        return Ok("Usuário registrado com sucesso!");
+        return Ok(response.Message); // Retorna uma mensagem de sucesso
     }
 
+    /// <summary>
+    /// Endpoint para autenticar um usuário e gerar um token JWT.
+    /// </summary>
+    /// <param name="email">O email do usuário.</param>
+    /// <param name="password">A senha do usuário.</param>
+    /// <returns>Uma resposta com um token JWT se as credenciais forem válidas.</returns>
     [HttpPost("login")]
     public async Task<IActionResult> Login(string email, string password)
     {
-        // Verificar se o e-mail existe
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
-        if (user == null)
-            return Unauthorized("E-mail ou senha inválidos.");
+        var response = await _authService.Login(email, password);
 
-        // Validar a senha fornecida com o hash armazenado
-        if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
-            return Unauthorized("E-mail ou senha inválidos.");
-
-        // (Opcional) Gerar um token JWT para o usuário logado
-        var token = GenerateJwtToken(user);
+        if (!response.IsSuccess)
+            return Unauthorized(response.Message); // Retorna um erro de autorização se as credenciais forem inválidas
 
         return Ok(new
         {
-            Message = "Login bem-sucedido!",
-            Token = token
+            response.Message, // Mensagem de sucesso
+            response.Token    // Token JWT gerado
         });
     }
 
-    // Método para gerar um token JWT (opcional)
-    private string GenerateJwtToken(User user)
-    {
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.UTF8.GetBytes("MySuperSecureAndLongerKeywithsize128123456"); // Use uma chave segura
-
-        var tokenDescriptor = new SecurityTokenDescriptor
-        {
-            Subject = new ClaimsIdentity(new[]
-            {
-            new Claim(ClaimTypes.Name, user.Email),
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
-        }),
-            Expires = DateTime.UtcNow.AddHours(1), // Expiração do token
-            Issuer = "your-issuer",
-            Audience = "your-audience",
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-        };
-
-        var token = tokenHandler.CreateToken(tokenDescriptor);
-        return tokenHandler.WriteToken(token);
-    }
-
+    /// <summary>
+    /// Endpoint para obter uma lista de todos os usuários registrados.
+    /// Requer autenticação.
+    /// </summary>
+    /// <returns>Uma lista de usuários com informações básicas.</returns>
     [Authorize]
     [HttpGet("users")]
     public async Task<IActionResult> GetUsers()
     {
-        // Obter todos os usuários do banco de dados
-        var users = await _context.Users
-            .Select(u => new
-            {
-                u.Id,
-                u.Email,
-                u.CreatedAt
-            })
-            .ToListAsync();
-
-        return Ok(users);
+        var users = await _authService.GetUsers(); // Obtém os usuários do serviço
+        return Ok(users); // Retorna a lista de usuários
     }
-
-
 }
-
-
