@@ -1,11 +1,12 @@
 {
   "Version": 1,
-  "Hash": "kxgza0x23dvpsnNddtMcLTCzJv/E5BdkY58NabN1p8k=",
+  "Hash": "TBtHifB7sDFwmFAAIUbbJdWSi8lLBjLkNp974xaxPhk=",
   "Source": "ToFood.ZipAPI",
   "BasePath": "_content/ToFood.ZipAPI",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
   "DiscoveryPatterns": [],
-  "Assets": []
+  "Assets": [],
+  "Endpoints": []
 }

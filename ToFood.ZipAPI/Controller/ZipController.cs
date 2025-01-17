@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using ToFood.Domain.Services;
 
-namespace ToFood.ZipAPI.Controllers;
+namespace ToFood.ZipAPI.Controller;
 
 [ApiController]
 [Authorize]

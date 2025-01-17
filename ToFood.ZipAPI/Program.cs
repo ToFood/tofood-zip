@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using ToFood.Domain.Factories;    // Para DatabaseFactory
 using ToFood.Domain.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,19 +18,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = "your-issuer",
             ValidAudience = "your-audience",
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])) // Use uma chave secreta segura
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder?.Configuration["Jwt:Key"] ?? "")) // Use uma chave secreta segura
         };
     });
 
 builder.Services.AddAuthorization();
 
-// Adiciona o DbContext ao contâiner de injeção de dependências
-builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Configuração do banco de dados usando o DatabaseFactory
+DatabaseFactory.ConfigureDatabases(builder.Services, builder.Configuration);
 
 // DI (Injeção de Dependência)
 builder.Services.AddScoped<ZipService>();
 builder.Services.AddScoped<YoutubeService>();
-
 
 // Adiciona o serviço de CORS
 builder.Services.AddCors(options =>
@@ -62,11 +61,9 @@ app.UseCors("ToFoodCORS");
 
 app.UseHttpsRedirection();
 
-// Adiciona roteamento para controllers
-app.UseRouting();
-
+// Adiciona autenticação e autorização
 app.UseAuthentication();
-app.UseAuthorization(); ; // Middleware para autenticação/validação de roles, se necessário
+app.UseAuthorization();
 
 // Mapeia automaticamente as rotas das controllers
 app.MapControllers();
