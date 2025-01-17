@@ -2,19 +2,19 @@
 using ToFood.Domain.Entities.Relational;
 using ToFood.Domain.Services;
 
-namespace ToFood.Tests.Services;
+namespace ToFood.Tests.IntegrationTests;
 
 /// <summary>
 /// Classe de testes para o serviço de autenticação (AuthService).
 /// </summary>
-public class AuthTests : TestBase
+public class AuthIntegrationTests : TestBase
 {
     private readonly AuthService _authService;
 
     /// <summary>
     /// Construtor que inicializa a classe de testes.
     /// </summary>
-    public AuthTests()
+    public AuthIntegrationTests()
     {
         // Inicializa o AuthService com o contexto e a configuração fornecidos pela TestBase
         _authService = new AuthService(RelationalContext, (AngleSharp.IConfiguration)Configuration);
