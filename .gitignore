@@ -54,3 +54,8 @@ ToFood.ZipAPI/Uploads/
 ToFood.ZipAPI/Output/
 /ToFood.ZipAPI/bin/
 /ToFood.ZipAPI/obj/
+/ToFood.ZipAPI/obj/Release/net8.0/ToFood.ZipAPI.AssemblyInfo.cs
+/ToFood.ZipAPI/obj/Release/net8.0/ToFood.ZipAPI.AssemblyInfoInputs.cache
+/ToFood.ZipAPI/obj/Release/net8.0/ToFood.ZipAPI.assets.cache
+/ToFood.ZipAPI/obj/Release/net8.0/ToFood.ZipAPI.csproj.AssemblyReference.cache
+/ToFood.ZipAPI/obj/Release/net8.0/ToFood.ZipAPI.GeneratedMSBuildEditorConfig.editorconfig
