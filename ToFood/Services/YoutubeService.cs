@@ -27,7 +27,14 @@ public class YoutubeService
         // Garante que o diretório de saída para vídeos existe
         Directory.CreateDirectory(_videoOutputPath);
     }
-
+    
+    /// <summary>
+    /// Busca um video no Youtube pela URL e faz o download
+    /// </summary>
+    /// <param name="videoUrl"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException"></exception>
+    /// <exception cref="Exception"></exception>
     public async Task<string> DownloadYoutubeVideo(string videoUrl)
     {
         if (string.IsNullOrEmpty(videoUrl))
@@ -88,7 +95,13 @@ public class YoutubeService
         return videoOutputPath;
     }
 
-    // Função para mesclar vídeo e áudio com FFmpeg
+    /// <summary>
+    /// Função para mesclar vídeo e áudio com FFmpeg
+    /// </summary>
+    /// <param name="videoPath"></param>
+    /// <param name="audioPath"></param>
+    /// <param name="outputPath"></param>
+    /// <returns></returns>
     private async Task MergeVideoAndAudioAsync(string videoPath, string audioPath, string outputPath)
     {
         await FFmpeg.Conversions.New()
@@ -99,7 +112,11 @@ public class YoutubeService
             .Start();
     }
 
-    // Função para limpar o nome do arquivo
+    /// <summary>
+    /// Função para limpar o nome do arquivo
+    /// </summary>
+    /// <param name="fileName"></param>
+    /// <returns></returns>
     private string GetSafeFileName(string fileName)
     {
         return string.Join("_", fileName.Split(Path.GetInvalidFileNameChars()));

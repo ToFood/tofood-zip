@@ -54,3 +54,6 @@ ToFood.ZipAPI/Uploads/
 ToFood.ZipAPI/Output/
 /ToFood.ZipAPI/bin/
 /ToFood.ZipAPI/obj/
+/ToFood.ZipAPI/obj/ToFood.ZipAPI.csproj.nuget.g.props
+/ToFood.ZipAPI/bin/Debug/net8.0/ToFood.ZipAPI.runtimeconfig.json
+/ToFood.ZipAPI/bin/Debug/net8.0/Newtonsoft.Json.dll
