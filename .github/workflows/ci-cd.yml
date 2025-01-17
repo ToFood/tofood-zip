@@ -20,17 +20,6 @@ env:
 
 jobs:
 
-
-  # Job de configuração do ambiente com todas as exceções necessárias
-  setup-environment:
-    name: 🌐 Configure Environment
-    runs-on: ubuntu-latest
-    steps:
-      - name: Configure DevExpress Feed
-        run: |
-          dotnet nuget add source https://nuget.devexpress.com/api -n DXFeed -u DevExpress -p $DEVEXPRESS_TOKEN --store-password-in-clear-text
-
-
   # Verifica as vunerabilidades da Aplicação
   #security-vulnerability:
 
@@ -39,8 +28,6 @@ jobs:
   build:
     name: 🛠️ Build Solution
     runs-on: ubuntu-latest
-    needs: [setup-environment]
-
 
     steps:
       - name: Checkout repository
