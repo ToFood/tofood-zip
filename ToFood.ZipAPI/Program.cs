@@ -1,6 +1,31 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using ToFood.Domain.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configuração do JWT
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = "your-issuer",
+            ValidAudience = "your-audience",
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])) // Use uma chave secreta segura
+        };
+    });
+
+builder.Services.AddAuthorization();
+
+// Adiciona o DbContext ao contâiner de injeção de dependências
+builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // DI (Injeção de Dependência)
 builder.Services.AddScoped<ZipService>();
@@ -40,7 +65,8 @@ app.UseHttpsRedirection();
 // Adiciona roteamento para controllers
 app.UseRouting();
 
-app.UseAuthorization(); // Middleware para autenticação/validação de roles, se necessário
+app.UseAuthentication();
+app.UseAuthorization(); ; // Middleware para autenticação/validação de roles, se necessário
 
 // Mapeia automaticamente as rotas das controllers
 app.MapControllers();
