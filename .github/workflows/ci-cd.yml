@@ -114,7 +114,7 @@ jobs:
 
 
   deploy:
-    name: 🐋 -> 🐇 Queues
+    name: 🚀 -> 📦 Deploy [AWS]
     runs-on: ubuntu-latest
     needs: [queue-dockers, service-dockers]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
