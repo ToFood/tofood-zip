@@ -1,4 +1,5 @@
-﻿using Xabe.FFmpeg;
+﻿using ToFood.Domain.Utils;
+using Xabe.FFmpeg;
 using YoutubeExplode;
 using YoutubeExplode.Videos.Streams;
 
@@ -12,17 +13,6 @@ public class YoutubeService
     public YoutubeService()
     {
         _youtubeClient = new YoutubeClient();
-
-        // Configura o caminho para os executáveis do FFmpeg
-        var ffmpegPath = Path.Combine(Directory.GetCurrentDirectory(), "ffmpeg_executables");
-        if (!Directory.Exists(ffmpegPath) ||
-            !File.Exists(Path.Combine(ffmpegPath, "ffmpeg.exe")) ||
-            !File.Exists(Path.Combine(ffmpegPath, "ffprobe.exe")))
-        {
-            throw new Exception("Os executáveis do FFmpeg não estão configurados corretamente no diretório 'ffmpeg_executables'.");
-        }
-
-        FFmpeg.SetExecutablesPath(ffmpegPath);
 
         // Garante que o diretório de saída para vídeos existe
         Directory.CreateDirectory(_videoOutputPath);
@@ -39,6 +29,9 @@ public class YoutubeService
     {
         if (string.IsNullOrEmpty(videoUrl))
             throw new ArgumentException("A URL do vídeo não pode ser nula ou vazia.");
+
+        // Verifica e configura os executáveis do FFmpeg
+        await FFmpegUtils.EnsureFFmpegIsConfigured();
 
         var videoInfo = await _youtubeClient.Videos.GetAsync(videoUrl);
         var streamManifest = await _youtubeClient.Videos.Streams.GetManifestAsync(videoUrl);
