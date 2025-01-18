@@ -59,3 +59,4 @@ ToFood.ZipAPI/Output/
 /ToFood.ZipAPI/obj/Release/net8.0/ToFood.ZipAPI.assets.cache
 /ToFood.ZipAPI/obj/Release/net8.0/ToFood.ZipAPI.csproj.AssemblyReference.cache
 /ToFood.ZipAPI/obj/Release/net8.0/ToFood.ZipAPI.GeneratedMSBuildEditorConfig.editorconfig
+/ToFood.ZipAPI/bin/Debug/net8.0/appsettings.json

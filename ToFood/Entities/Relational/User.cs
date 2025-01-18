@@ -14,7 +14,7 @@ public class User
     /// </summary>
     [Key]
     [Column("id")]
-    public int Id { get; set; }
+    public Guid Id { get; set; }
 
     /// <summary>
     /// Email do usuário.

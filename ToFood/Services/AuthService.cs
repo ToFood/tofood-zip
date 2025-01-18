@@ -1,5 +1,4 @@
-﻿using AngleSharp;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -14,18 +13,19 @@ namespace ToFood.Domain.Services;
 /// </summary>
 public class AuthService
 {
-    private readonly ToFoodRelationalContext _context;
-    private readonly IConfiguration _configuration;
+    /// <summary>
+    /// Conexão com o banco relacional
+    /// </summary>
+    private readonly ToFoodRelationalContext _dbRelationalContext;
     private readonly string _jwtSecret = "MySuperSecureAndLongerKeywithsize128123456"; // Chave secreta do token
 
     /// <summary>
     /// Inicializa uma nova instância do serviço de autenticação com o contexto do banco de dados.
     /// </summary>
-    /// <param name="context">O contexto do banco de dados.</param>
-    public AuthService(ToFoodRelationalContext context, IConfiguration configuration)
+    /// <param name="dbRelationalContext">O contexto do banco de dados.</param>
+    public AuthService(ToFoodRelationalContext dbRelationalContext)
     {
-        _context = context;
-        _configuration = configuration;
+        _dbRelationalContext = dbRelationalContext;
     }
 
     /// <summary>
@@ -36,7 +36,7 @@ public class AuthService
     /// <returns>Um objeto contendo o resultado da operação.</returns>
     public async Task<AuthResponse> Register(string email, string password)
     {
-        if (await _context.Users.AnyAsync(u => u.Email == email))
+        if (await _dbRelationalContext.Users.AnyAsync(u => u.Email == email))
         {
             return new AuthResponse
             {
@@ -53,8 +53,8 @@ public class AuthService
             PasswordHash = passwordHash
         };
 
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
+        _dbRelationalContext.Users.Add(user);
+        await _dbRelationalContext.SaveChangesAsync();
 
         return new AuthResponse
         {
@@ -71,7 +71,7 @@ public class AuthService
     /// <returns>Um objeto contendo o resultado da operação e o token JWT, se bem-sucedido.</returns>
     public async Task<AuthResponse> Login(string email, string password)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        var user = await _dbRelationalContext.Users.FirstOrDefaultAsync(u => u.Email == email);
 
         if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
         {
@@ -98,7 +98,7 @@ public class AuthService
     /// <returns>Uma lista de usuários com seus IDs, emails e datas de criação.</returns>
     public async Task<object> GetUsers()
     {
-        return await _context.Users
+        return await _dbRelationalContext.Users
             .Select(u => new
             {
                 u.Id,

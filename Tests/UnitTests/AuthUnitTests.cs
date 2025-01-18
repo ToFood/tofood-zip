@@ -31,7 +31,7 @@ public class AuthServiceUnitTests
         mockConfiguration.Setup(config => config["Jwt:Audience"]).Returns("your-audience");
 
         // Instância do AuthService com os mocks
-        _authService = new AuthService(_mockContext.Object, (AngleSharp.IConfiguration)mockConfiguration.Object);
+        _authService = new AuthService(_mockContext.Object);
     }
 
     /// <summary>

@@ -17,7 +17,7 @@ public class AuthIntegrationTests : TestBase
     public AuthIntegrationTests()
     {
         // Inicializa o AuthService com o contexto e a configuração fornecidos pela TestBase
-        _authService = new AuthService(RelationalContext, (AngleSharp.IConfiguration)Configuration);
+        _authService = new AuthService(RelationalContext);
     }
 
     /// <summary>

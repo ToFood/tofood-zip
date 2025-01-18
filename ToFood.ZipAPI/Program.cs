@@ -30,6 +30,7 @@ DatabaseFactory.ConfigureDatabases(builder.Services, builder.Configuration);
 // DI (Injeção de Dependência)
 builder.Services.AddScoped<ZipService>();
 builder.Services.AddScoped<YoutubeService>();
+builder.Services.AddScoped<AuthService>();
 
 // Adiciona o serviço de CORS
 builder.Services.AddCors(options =>
