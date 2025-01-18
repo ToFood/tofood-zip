@@ -3,6 +3,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using ToFood.Domain.DB.NonRelational;
 using ToFood.Domain.DB.Relational;
 using ToFood.Domain.Entities.Relational;
 
@@ -17,15 +18,17 @@ public class AuthService
     /// Conexão com o banco relacional
     /// </summary>
     private readonly ToFoodRelationalContext _dbRelationalContext;
+    private readonly ToFoodNonRelationalContext _dbNonRelationalContext;
     private readonly string _jwtSecret = "MySuperSecureAndLongerKeywithsize128123456"; // Chave secreta do token
 
     /// <summary>
     /// Inicializa uma nova instância do serviço de autenticação com o contexto do banco de dados.
     /// </summary>
     /// <param name="dbRelationalContext">O contexto do banco de dados.</param>
-    public AuthService(ToFoodRelationalContext dbRelationalContext)
+    public AuthService(ToFoodRelationalContext dbRelationalContext, ToFoodNonRelationalContext toFoodNonRelationalContext)
     {
         _dbRelationalContext = dbRelationalContext;
+        _dbNonRelationalContext = toFoodNonRelationalContext;
     }
 
     /// <summary>
