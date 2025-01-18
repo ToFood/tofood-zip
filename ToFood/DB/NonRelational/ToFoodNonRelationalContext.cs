@@ -1,13 +1,11 @@
 ﻿using MongoDB.Driver;
 
-namespace ToFood.Domain.DB.NonRelational;
-
-/// <summary>
-/// Contexto genérico para bancos não-relacionais.
-/// </summary>
 public abstract class ToFoodNonRelationalContext
 {
-    protected readonly IMongoDatabase MongoDatabase;
+    /// <summary>
+    /// Banco de dados MongoDB.
+    /// </summary>
+    protected IMongoDatabase MongoDatabase { get; }
 
     /// <summary>
     /// Inicializa o contexto para o banco não-relacional.
@@ -17,10 +15,10 @@ public abstract class ToFoodNonRelationalContext
     protected ToFoodNonRelationalContext(string connectionString, string databaseName)
     {
         if (string.IsNullOrWhiteSpace(connectionString))
-            throw new ArgumentNullException(nameof(connectionString), $"A string de conexão com o {databaseName} não pode ser nula ou vazia.");
+            throw new ArgumentNullException(nameof(connectionString), "A string de conexão não pode ser nula ou vazia.");
 
         if (string.IsNullOrWhiteSpace(databaseName))
-            throw new ArgumentNullException(nameof(databaseName), "O nome do banco de dados não pode ser nulo ou vazio.");
+            throw new ArgumentNullException(nameof(databaseName), "O nome do banco não pode ser nulo ou vazio.");
 
         var client = new MongoClient(connectionString);
         MongoDatabase = client.GetDatabase(databaseName);
@@ -29,7 +27,7 @@ public abstract class ToFoodNonRelationalContext
     }
 
     /// <summary>
-    /// Método abstrato para configurar as coleções.
+    /// Método abstrato para configurar coleções no contexto.
     /// </summary>
     protected abstract void ConfigureCollections();
 }

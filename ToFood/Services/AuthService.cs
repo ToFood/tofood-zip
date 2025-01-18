@@ -1,11 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using ToFood.Domain.DB.NonRelational;
 using ToFood.Domain.DB.Relational;
+using ToFood.Domain.Entities.NonRelational;
 using ToFood.Domain.Entities.Relational;
+using ToFood.Domain.Helpers;
 
 namespace ToFood.Domain.Services;
 
@@ -14,31 +16,32 @@ namespace ToFood.Domain.Services;
 /// </summary>
 public class AuthService
 {
-    /// <summary>
-    /// Conexão com o banco relacional
-    /// </summary>
     private readonly ToFoodRelationalContext _dbRelationalContext;
-    private readonly ToFoodNonRelationalContext _dbNonRelationalContext;
+    private readonly ILogger<AuthService> _logger;
     private readonly string _jwtSecret = "MySuperSecureAndLongerKeywithsize128123456"; // Chave secreta do token
 
     /// <summary>
-    /// Inicializa uma nova instância do serviço de autenticação com o contexto do banco de dados.
+    /// Inicializa uma nova instância do serviço de autenticação com o contexto do banco de dados e LogHelper.
     /// </summary>
-    /// <param name="dbRelationalContext">O contexto do banco de dados.</param>
-    public AuthService(ToFoodRelationalContext dbRelationalContext, ToFoodNonRelationalContext toFoodNonRelationalContext)
+    public AuthService(
+        ToFoodRelationalContext dbRelationalContext,
+        ILogger<AuthService> logger
+        )
     {
         _dbRelationalContext = dbRelationalContext;
-        _dbNonRelationalContext = toFoodNonRelationalContext;
+        _logger = logger;
     }
 
     /// <summary>
     /// Registra um novo usuário no sistema.
-    /// </summary>
     /// <param name="email">O email do usuário.</param>
     /// <param name="password">A senha do usuário.</param>
     /// <returns>Um objeto contendo o resultado da operação.</returns>
+    /// </summary>
     public async Task<AuthResponse> Register(string email, string password)
     {
+        _logger.LogInformation("Exemplo de log no MongoDB.");
+
         if (await _dbRelationalContext.Users.AnyAsync(u => u.Email == email))
         {
             return new AuthResponse
@@ -56,28 +59,44 @@ public class AuthService
             PasswordHash = passwordHash
         };
 
-        _dbRelationalContext.Users.Add(user);
-        await _dbRelationalContext.SaveChangesAsync();
-
-        return new AuthResponse
+        try
         {
-            IsSuccess = true,
-            Message = "Usuário registrado com sucesso!"
-        };
+            _dbRelationalContext.Users.Add(user);
+            await _dbRelationalContext.SaveChangesAsync();
+
+            _logger.LogInformation("Exemplo de log no MongoDB.");
+
+            return new AuthResponse
+            {
+                IsSuccess = true,
+                Message = "Usuário registrado com sucesso!"
+            };
+        }
+        catch (Exception)
+        {
+            _logger.LogInformation("Exemplo de log no MongoDB.");
+
+            return new AuthResponse
+            {
+                IsSuccess = false,
+                Message = "Erro interno no servidor."
+            };
+        }
     }
 
     /// <summary>
     /// Realiza o login de um usuário, verificando as credenciais fornecidas e retornando um token JWT.
     /// </summary>
-    /// <param name="email">O email do usuário.</param>
-    /// <param name="password">A senha do usuário.</param>
-    /// <returns>Um objeto contendo o resultado da operação e o token JWT, se bem-sucedido.</returns>
     public async Task<AuthResponse> Login(string email, string password)
     {
+        _logger.LogInformation("Exemplo de log no MongoDB.");
+
         var user = await _dbRelationalContext.Users.FirstOrDefaultAsync(u => u.Email == email);
 
         if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
         {
+            _logger.LogInformation("Exemplo de log no MongoDB.");
+
             return new AuthResponse
             {
                 IsSuccess = false,
@@ -86,6 +105,8 @@ public class AuthService
         }
 
         var token = GenerateJwtToken(user);
+
+        _logger.LogInformation("Exemplo de log no MongoDB.");
 
         return new AuthResponse
         {
@@ -114,8 +135,6 @@ public class AuthService
     /// <summary>
     /// Gera um token JWT para autenticar o usuário.
     /// </summary>
-    /// <param name="user">O usuário para o qual o token será gerado.</param>
-    /// <returns>Um token JWT como string.</returns>
     private string GenerateJwtToken(User user)
     {
         var tokenHandler = new JwtSecurityTokenHandler();

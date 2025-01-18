@@ -1,10 +1,15 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
+using MongoDB.Driver;
 using System.Text;
+using ToFood.Domain.Entities.NonRelational;
 using ToFood.Domain.Factories;
+using ToFood.Domain.Helpers;
 using ToFood.Domain.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
 
 // Configuração do JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -27,9 +32,18 @@ builder.Services.AddAuthorization();
 // Configuração do banco de dados usando o DatabaseFactory
 DatabaseFactory.ConfigureDatabases(builder.Services, builder.Configuration);
 
+// Recupera a coleção de logs para o logger
+var serviceProvider = builder.Services.BuildServiceProvider();
+var logCollection = serviceProvider.GetRequiredService<IMongoCollection<Log>>();
+
+// Configura o logger customizado
+builder.Logging.ClearProviders();
+builder.Logging.AddProvider(new MongoDbLoggerProvider(logCollection));
+
 // DI (Injeção de Dependência)
 builder.Services.AddScoped<ZipService>();
 builder.Services.AddScoped<YoutubeService>();
+builder.Services.AddScoped<LogHelper>();
 builder.Services.AddScoped<AuthService>();
 
 // Adiciona o serviço de CORS

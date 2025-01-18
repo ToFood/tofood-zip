@@ -7,6 +7,7 @@ using ToFood.Domain.DB.NonRelational;
 using ToFood.Domain.DB.Relational.PostgreSQL;
 using System.Text;
 using ToFood.Domain.DB.NonRelational.MongoDB;
+using ToFood.Domain.Entities.NonRelational;
 
 namespace ToFood.Domain.Factories;
 
@@ -42,13 +43,12 @@ public static class DatabaseFactory
     /// </summary>
     private static void ConfigureRelationalDatabase(IServiceCollection services, IConfiguration configuration)
     {
-        var relationalDatabaseType = configuration["RelationalDatabaseType"];
-        switch (relationalDatabaseType)
+        var relationalDatabaseProvider = configuration["RelationalDatabaseProvider"];
+        switch (relationalDatabaseProvider)
         {
             case "PostgreSQL":
                 // Recupera a connection string do PostgreSQL
                 var postgreSqlConnectionString = configuration.GetConnectionString("PostgreSQL") ?? "";
-                var postgreSqlDatabaseName = relationalDatabaseType;
 
                 // Configura o DbContext para PostgreSQL
                 services.AddDbContext<ToFoodRelationalContext, PostgreSqlContext>(options =>
@@ -56,7 +56,7 @@ public static class DatabaseFactory
                         .EnableDetailedErrors());
 
                 // Testa a conexão com PostgreSQL
-                TestDatabaseConnection(postgreSqlConnectionString, postgreSqlDatabaseName);
+                TestDatabaseConnection(postgreSqlConnectionString, relationalDatabaseProvider);
                 break;
 
             /*
@@ -83,23 +83,32 @@ public static class DatabaseFactory
     /// </summary>
     private static void ConfigureNonRelationalDatabase(IServiceCollection services, IConfiguration configuration)
     {
-        var nonRelationalDatabaseType = configuration["NonRelationalDatabaseType"];
-        switch (nonRelationalDatabaseType)
+        var nonRelationalDatabaseProvider = configuration["NonRelationalDatabaseProvider"];
+        switch (nonRelationalDatabaseProvider)
         {
             case "MongoDB":
                 // Recupera a string de conexão completa do MongoDB
                 var mongoConnectionString = configuration.GetConnectionString("MongoDB") ?? "";
 
+                // Cria o cliente do MongoDB
+                var mongoClient = new MongoClient(mongoConnectionString);
+
                 // Extrai o nome do banco da string de conexão
                 var mongoUrl = new MongoUrl(mongoConnectionString);
-                var mongoDatabaseName = nonRelationalDatabaseType;
+                var mongoDatabaseName = mongoUrl.DatabaseName;
 
-                // Registra o MongoLogContext como ToFoodNonRelationalContext
+                // Obtém o banco de dados
+                var mongoDatabase = mongoClient.GetDatabase(mongoDatabaseName);
+
+                // Registra o contexto geral para MongoDB
                 services.AddSingleton<ToFoodNonRelationalContext>(_ =>
                     new MongoContext(mongoConnectionString, mongoDatabaseName));
 
+                // Registra a coleção de logs como serviço
+                services.AddSingleton(_ => mongoDatabase.GetCollection<Log>("logs"));
+
                 // Testa a conexão com o MongoDB
-                TestDatabaseConnection(mongoConnectionString, mongoDatabaseName);
+                TestDatabaseConnection(mongoConnectionString, nonRelationalDatabaseProvider);
                 break;
 
             default:
@@ -107,22 +116,24 @@ public static class DatabaseFactory
         }
     }
 
+
+
     /// <summary>
     /// Realiza um teste de conexão com qualquer tipo de banco de dados.
     /// </summary>
     /// <param name="connectionString">A string de conexão do banco de dados.</param>
     /// <param name="databaseName">O nome do banco de dados (se aplicável).</param>
-    private static void TestDatabaseConnection(string connectionString, string? databaseName = null)
+    private static void TestDatabaseConnection(string connectionString, string? dataBaseProvider = null)
     {
         try
         {
-            switch (databaseName)
+            switch (dataBaseProvider)
             {
                 case "PostgreSQL":
                     using (var connection = new Npgsql.NpgsqlConnection(connectionString))
                     {
                         connection.Open(); // Tenta abrir a conexão
-                        Console.WriteLine($"🐘 {databaseName} - Conexão bem sucedida com [Banco Relacional]. connectionString: [{connectionString}]");
+                        Console.WriteLine($"🐘 {dataBaseProvider} - Conexão bem sucedida com [Banco Relacional]. connectionString: [{connectionString}]");
                     }
                     break;
 
@@ -134,16 +145,16 @@ public static class DatabaseFactory
 
                     // Testa se a conexão está funcional listando as coleções
                     database.ListCollectionNames();
-                    Console.WriteLine($"🍃 {databaseName} - Conexão bem sucedida com [Banco Não Relacional]. connectionString: [{connectionString}]");
+                    Console.WriteLine($"🍃 {dataBaseProvider} - Conexão bem sucedida com [Banco Não Relacional]. connectionString: [{connectionString}]");
                     break;
 
                 default:
-                    throw new InvalidOperationException($"Tipo de banco de dados '{databaseName}' não suportado.");
+                    throw new InvalidOperationException($"Tipo de banco de dados '{dataBaseProvider}' não suportado.");
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ Falha ao conectar ao banco '{databaseName}': {ex.Message}");
+            Console.WriteLine($"❌ Falha ao conectar ao banco '{dataBaseProvider}': {ex.Message}");
         }
     }
 
