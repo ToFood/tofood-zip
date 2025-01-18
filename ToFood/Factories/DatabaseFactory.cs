@@ -6,6 +6,7 @@ using ToFood.Domain.DB.Relational;
 using ToFood.Domain.DB.NonRelational;
 using ToFood.Domain.DB.Relational.PostgreSQL;
 using System.Text;
+using ToFood.Domain.DB.NonRelational.MongoDB;
 
 namespace ToFood.Domain.Factories;
 
@@ -93,9 +94,9 @@ public static class DatabaseFactory
                 var mongoUrl = new MongoUrl(mongoConnectionString);
                 var mongoDatabaseName = nonRelationalDatabaseType;
 
-                // Configura o contexto do MongoDB
+                // Registra o MongoLogContext como ToFoodNonRelationalContext
                 services.AddSingleton<ToFoodNonRelationalContext>(_ =>
-                    new ToFoodNonRelationalContext(mongoConnectionString, mongoDatabaseName));
+                    new MongoContext(mongoConnectionString, mongoDatabaseName));
 
                 // Testa a conexão com o MongoDB
                 TestDatabaseConnection(mongoConnectionString, mongoDatabaseName);
