@@ -41,12 +41,11 @@ public static class DatabaseFactory
                 var postgreSqlDatabaseName = "PostgreSQL";
 
                 // Exibe a connection string no console
-                Console.WriteLine($"Usando connection string para {postgreSqlDatabaseName}: {postgreSqlConnectionString}");
+                Console.WriteLine($"🐘 Usando connection string para {postgreSqlDatabaseName}: {postgreSqlConnectionString}");
 
                 // Configura o DbContext para PostgreSQL
                 services.AddDbContext<ToFoodRelationalContext, PostgreSqlContext>(options =>
                     options.UseNpgsql(postgreSqlConnectionString)
-                        .EnableSensitiveDataLogging()
                         .EnableDetailedErrors());
 
                 // Testa a conexão com PostgreSQL
@@ -77,23 +76,26 @@ public static class DatabaseFactory
     /// </summary>
     private static void ConfigureNonRelationalDatabase(IServiceCollection services, IConfiguration configuration)
     {
-        var nonRelationalDatabaseType = "MongoDB"; // Pode ser parametrizado se suportar outros bancos no futuro
+        var nonRelationalDatabaseType = configuration["NonRelationalDatabaseType"];
         switch (nonRelationalDatabaseType)
         {
             case "MongoDB":
-                // Recupera a connection string e o nome do banco do MongoDB
-                var mongoConnectionString = configuration.GetConnectionString("MongoDB:ConnectionString") ?? "";
-                var mongoDatabaseName = configuration["ConnectionStrings:MongoDB:DatabaseName"] ?? "";
+                // Recupera a string de conexão completa do MongoDB
+                var mongoConnectionString = configuration.GetConnectionString("MongoDB") ?? "";
 
-                // Exibe a connection string no console
-                Console.WriteLine($"Usando connection string para {nonRelationalDatabaseType}: {mongoConnectionString}");
+                // Extrai o nome do banco da string de conexão
+                var mongoUrl = new MongoUrl(mongoConnectionString);
+                var mongoDatabaseName = mongoUrl.DatabaseName;
+
+                // Exibe a string de conexão no console (parcialmente mascarada, se necessário)
+                Console.WriteLine($"🍃 Usando connection string para {nonRelationalDatabaseType}: {mongoConnectionString}");
 
                 // Configura o contexto do MongoDB
                 services.AddSingleton<ToFoodNonRelationalContext>(_ =>
                     new ToFoodNonRelationalContext(mongoConnectionString, mongoDatabaseName));
 
                 // Testa a conexão com o MongoDB
-                TestMongoDatabaseConnection(mongoConnectionString, mongoDatabaseName);
+                TestMongoDatabaseConnection(mongoConnectionString);
                 break;
 
             default:
@@ -112,11 +114,11 @@ public static class DatabaseFactory
         {
             using var connection = new Npgsql.NpgsqlConnection(connectionString);
             connection.Open(); // Tenta abrir a conexão
-            Console.WriteLine($"Conexão com o banco relacional '{databaseName}' bem-sucedida.");
+            Console.WriteLine($"✅ Conexão com o banco relacional '{databaseName}' bem-sucedida.");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Falha ao conectar no banco relacional '{databaseName}': {ex.Message}");
+            Console.WriteLine($"❌ Falha ao conectar no banco relacional '{databaseName}': {ex.Message}");
         }
     }
 
@@ -125,18 +127,25 @@ public static class DatabaseFactory
     /// </summary>
     /// <param name="connectionString">A string de conexão do MongoDB.</param>
     /// <param name="databaseName">O nome do banco de dados MongoDB.</param>
-    private static void TestMongoDatabaseConnection(string connectionString, string databaseName)
+    /// <summary>
+    /// Testa a conexão com o MongoDB.
+    /// </summary>
+    /// <param name="connectionString">A string de conexão do MongoDB.</param>
+    private static void TestMongoDatabaseConnection(string connectionString)
     {
         try
         {
-            var client = new MongoClient(connectionString);
-            var database = client.GetDatabase(databaseName); // Verifica se o banco é acessível
-            database.ListCollectionNames(); // Tenta listar coleções como teste de conectividade
-            Console.WriteLine($"Conexão com o banco não-relacional '{databaseName}' bem-sucedida.");
+            var mongoClient = new MongoClient(connectionString);
+            var mongoUrl = new MongoUrl(connectionString);
+            var database = mongoClient.GetDatabase(mongoUrl.DatabaseName ?? throw new InvalidOperationException("Nome do banco não especificado na string de conexão."));
+
+            // Testa se a conexão está funcional listando as coleções
+            database.ListCollectionNames();
+            Console.WriteLine($"✅ Conexão com o banco não-relacional '{mongoUrl.DatabaseName}' bem-sucedida.");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Falha ao conectar ao banco não-relacional '{databaseName}': {ex.Message}");
+            Console.WriteLine($"❌ Falha ao conectar ao banco não-relacional: {ex.Message}");
         }
     }
 }
