@@ -1,4 +1,4 @@
-﻿namespace ToFood.ZipAPI.DTOs.Responses;
+﻿namespace ToFood.ZipAPI.DTOs.Response;
 
 public class DownloadYoutubeVideoResponse
 {

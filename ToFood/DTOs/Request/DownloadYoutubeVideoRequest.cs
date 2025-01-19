@@ -1,4 +1,4 @@
-﻿namespace ToFood.ZipAPI.DTOs.Requests;
+﻿namespace ToFood.Domain.DTOs.Request;
 
 public class DownloadYoutubeVideoRequest
 {

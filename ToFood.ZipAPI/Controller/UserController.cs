@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using ToFood.Domain.Services;
+using ToFood.Domain.DTOs.Request;
 
 [ApiController]
 [Route("User")]
@@ -20,20 +21,24 @@ public class UserController : ControllerBase
     /// <summary>
     /// Endpoint para registrar um novo usuário.
     /// </summary>
-    /// <param name="email">O email do usuário a ser registrado.</param>
-    /// <param name="password">A senha do usuário a ser registrado.</param>
+    /// <param name="registerUserDto">Objeto contendo os dados do usuário a ser registrado.</param>
     /// <returns>Uma resposta indicando o sucesso ou falha do registro.</returns>
     [AllowAnonymous]
     [HttpPost("register")]
-    public async Task<IActionResult> Register(string email, string password)
+    public async Task<IActionResult> Register([FromBody] RegisterUserRequest registerUserRequest)
     {
-        var response = await _userService.Register(email, password);
+        if (registerUserRequest == null)
+            return BadRequest("Os dados do usuário são obrigatórios.");
+
+        // Chama o serviço de registro passando os dados do DTO
+        var response = await _userService.Register(registerUserRequest);
 
         if (!response.IsSuccess)
             return BadRequest(response.Message); // Retorna um erro se o registro falhar
 
         return Ok(response.Message); // Retorna uma mensagem de sucesso
     }
+
 
     /// <summary>
     /// Endpoint para obter uma lista de todos os usuários registrados.

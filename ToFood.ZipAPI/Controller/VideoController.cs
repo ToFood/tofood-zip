@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ToFood.Domain.Services;
-using ToFood.ZipAPI.DTOs.Requests;
-using ToFood.ZipAPI.DTOs.Responses;
+using ToFood.Domain.DTOs.Request;
+using ToFood.Domain.DTOs.Response;
 
 namespace ToFood.ZipAPI.Controller;
 
