@@ -16,7 +16,7 @@ public class ToFoodRelationalContext : DbContext
     /// <summary>
     /// Representa a tabela [users] no banco de dados.
     /// </summary>
-    public DbSet<User> Users { get; set; }
+    public virtual DbSet<User> Users { get; set; }
 
     /// <summary>
     /// Configuração do mapeamento das entidades.

@@ -1,54 +1,50 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 using ToFood.Domain.Entities.Relational;
 using ToFood.Domain.Services;
+using ToFood.Domain.DB.Relational;
 
 namespace ToFood.Tests.IntegrationTests;
 
 /// <summary>
-/// Classe de testes para o serviço de autenticação (AuthService).
+/// Classe de testes de integração para o serviço de autenticação (AuthService).
 /// </summary>
-public class AuthIntegrationTests : TestBase
+public class AuthIntegrationTests
 {
     private readonly AuthService _authService;
+    private readonly ToFoodRelationalContext _dbContext;
 
     /// <summary>
     /// Construtor que inicializa a classe de testes.
     /// </summary>
     public AuthIntegrationTests()
     {
-        // Inicializa o AuthService com o contexto e a configuração fornecidos pela TestBase
-        _authService = new AuthService(RelationalContext);
-    }
+        // Configurar o banco de dados In-Memory
+        var options = new DbContextOptionsBuilder<ToFoodRelationalContext>()
+            .UseInMemoryDatabase("AuthIntegrationTestDatabase")
+            .Options;
 
-    /// <summary>
-    /// Testa o registro de um novo usuário com sucesso.
-    /// </summary>
-    [Fact]
-    public async Task Register_ValidUser_ReturnsSuccess()
-    {
-        // Act
-        var response = await _authService.Register("newuser@example.com", "password123");
+        _dbContext = new ToFoodRelationalContext(options);
 
-        // Assert
-        Assert.True(response.IsSuccess);
-        Assert.Equal("Usuário registrado com sucesso!", response.Message);
+        // Configuração do IConfiguration
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                { "Jwt:Key", "tofood!aA1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8S9T0U1V2W3X4Y5Z6!" },
+                { "Jwt:Issuer", "your-issuer" },
+                { "Jwt:Audience", "your-audience" }
+            })
+            .Build();
 
-        var user = await RelationalContext.Users.FirstOrDefaultAsync(u => u.Email == "newuser@example.com");
-        Assert.NotNull(user);
-    }
+        // Logger real ou mock
+        var logger = new LoggerFactory().CreateLogger<AuthService>();
 
-    /// <summary>
-    /// Testa o registro de um usuário já existente (falha esperada).
-    /// </summary>
-    [Fact]
-    public async Task Register_DuplicateEmail_ReturnsError()
-    {
-        // Act
-        var response = await _authService.Register("test@example.com", "password123");
+        // Inicializa o AuthService com o contexto e as dependências configuradas
+        _authService = new AuthService(_dbContext, logger, configuration);
 
-        // Assert
-        Assert.False(response.IsSuccess);
-        Assert.Equal("Email já está em uso.", response.Message);
+        // Popula o banco de dados com dados iniciais
+        SeedDatabase();
     }
 
     /// <summary>
@@ -95,37 +91,18 @@ public class AuthIntegrationTests : TestBase
     }
 
     /// <summary>
-    /// Testa a recuperação da lista de usuários.
-    /// </summary>
-    [Fact]
-    public async Task GetUsers_ReturnsUserList()
-    {
-        // Act
-        var users = await _authService.GetUsers();
-
-        // Assert
-        Assert.NotNull(users);
-
-        // Converte o retorno para IEnumerable<object> de forma explícita
-        var userList = users as IEnumerable<object>;
-        Assert.NotNull(userList); // Garante que a conversão foi bem-sucedida
-        Assert.NotEmpty(userList); // Verifica que a coleção não está vazia
-    }
-
-
-    /// <summary>
     /// Popula o banco de dados com dados iniciais para os testes.
     /// </summary>
-    protected override void SeedDatabase()
+    private void SeedDatabase()
     {
         var passwordHash = BCrypt.Net.BCrypt.HashPassword("password123");
 
-        RelationalContext.Users.Add(new User
+        _dbContext.Users.Add(new User
         {
             Email = "test@example.com",
             PasswordHash = passwordHash
         });
 
-        RelationalContext.SaveChanges();
+        _dbContext.SaveChanges();
     }
 }

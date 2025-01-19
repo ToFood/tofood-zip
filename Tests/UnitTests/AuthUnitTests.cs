@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Moq;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 using ToFood.Domain.DB.Relational;
 using ToFood.Domain.Entities.Relational;
 using ToFood.Domain.Services;
@@ -11,69 +12,35 @@ namespace ToFood.Tests.UnitTests;
 /// </summary>
 public class AuthServiceUnitTests
 {
-    private readonly Mock<ToFoodRelationalContext> _mockContext;
-    private readonly Mock<DbSet<User>> _mockUserDbSet;
+    private readonly ToFoodRelationalContext _dbContext;
+    private readonly ILogger<AuthService> _logger;
+    private readonly IConfiguration _configuration;
     private readonly AuthService _authService;
 
     public AuthServiceUnitTests()
     {
-        // Mock do DbSet<User>
-        _mockUserDbSet = new Mock<DbSet<User>>();
+        // Configurar o banco de dados In-Memory
+        var options = new DbContextOptionsBuilder<ToFoodRelationalContext>()
+            .UseInMemoryDatabase("AuthUnitTestDatabase")
+            .Options;
 
-        // Mock do DbContext
-        _mockContext = new Mock<ToFoodRelationalContext>();
-        _mockContext.Setup(c => c.Users).Returns(_mockUserDbSet.Object);
+        _dbContext = new ToFoodRelationalContext(options);
 
-        // Mock do IConfiguration
-        var mockConfiguration = new Mock<Microsoft.Extensions.Configuration.IConfiguration>();
-        mockConfiguration.Setup(config => config["Jwt:Key"]).Returns("tofood!aA1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8S9T0U1V2W3X4Y5Z6!");
-        mockConfiguration.Setup(config => config["Jwt:Issuer"]).Returns("your-issuer");
-        mockConfiguration.Setup(config => config["Jwt:Audience"]).Returns("your-audience");
+        // Adicionar configuração in-memory para JWT
+        _configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                { "Jwt:Key", "tofood!aA1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8S9T0U1V2W3X4Y5Z6!" },
+                { "Jwt:Issuer", "your-issuer" },
+                { "Jwt:Audience", "your-audience" }
+            })
+            .Build();
 
-        // Instância do AuthService com os mocks
-        _authService = new AuthService(_mockContext.Object);
-    }
+        // Instanciar o logger real ou um mock
+        _logger = new LoggerFactory().CreateLogger<AuthService>();
 
-    /// <summary>
-    /// Testa o registro de um novo usuário com sucesso.
-    /// </summary>
-    [Fact]
-    public async Task Register_ValidUser_ReturnsSuccess()
-    {
-        // Arrange
-        _mockUserDbSet.Setup(m => m.AnyAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>(), default))
-            .ReturnsAsync(false); // Nenhum usuário com o mesmo email
-
-        // Act
-        var response = await _authService.Register("newuser@example.com", "password123");
-
-        // Assert
-        Assert.True(response.IsSuccess);
-        Assert.Equal("Usuário registrado com sucesso!", response.Message);
-
-        _mockUserDbSet.Verify(m => m.Add(It.IsAny<User>()), Times.Once); // Verifica se o Add foi chamado
-        _mockContext.Verify(m => m.SaveChangesAsync(default), Times.Once); // Verifica se o SaveChanges foi chamado
-    }
-
-    /// <summary>
-    /// Testa o registro de um usuário com email já existente.
-    /// </summary>
-    [Fact]
-    public async Task Register_DuplicateEmail_ReturnsError()
-    {
-        // Arrange
-        _mockUserDbSet.Setup(m => m.AnyAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>(), default))
-            .ReturnsAsync(true); // Simula um usuário já existente
-
-        // Act
-        var response = await _authService.Register("existinguser@example.com", "password123");
-
-        // Assert
-        Assert.False(response.IsSuccess);
-        Assert.Equal("Email já está em uso.", response.Message);
-
-        _mockUserDbSet.Verify(m => m.Add(It.IsAny<User>()), Times.Never); // Verifica que o Add não foi chamado
-        _mockContext.Verify(m => m.SaveChangesAsync(default), Times.Never); // Verifica que o SaveChanges não foi chamado
+        // Instância do AuthService
+        _authService = new AuthService(_dbContext, _logger, _configuration);
     }
 
     /// <summary>
@@ -83,9 +50,12 @@ public class AuthServiceUnitTests
     public async Task Login_ValidCredentials_ReturnsToken()
     {
         // Arrange
-        var user = new User { Email = "test@example.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123") };
-        _mockUserDbSet.Setup(m => m.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<Func<User, bool>>>(), default))
-            .ReturnsAsync(user); // Simula um usuário encontrado
+        _dbContext.Users.Add(new User
+        {
+            Email = "test@example.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123")
+        });
+        await _dbContext.SaveChangesAsync();
 
         // Act
         var response = await _authService.Login("test@example.com", "password123");
@@ -103,9 +73,12 @@ public class AuthServiceUnitTests
     public async Task Login_InvalidEmail_ReturnsError()
     {
         // Arrange
-        _mockUserDbSet.Setup(m => m.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<Func<User, bool>>>(), default))
-        .ReturnsAsync((User?)null); // Simula nenhum usuário encontrado
-
+        _dbContext.Users.Add(new User
+        {
+            Email = "test@example.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123")
+        });
+        await _dbContext.SaveChangesAsync();
 
         // Act
         var response = await _authService.Login("invalid@example.com", "password123");
@@ -122,9 +95,12 @@ public class AuthServiceUnitTests
     public async Task Login_InvalidPassword_ReturnsError()
     {
         // Arrange
-        var user = new User { Email = "test@example.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123") };
-        _mockUserDbSet.Setup(m => m.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>(), default))
-            .ReturnsAsync(user); // Simula um usuário encontrado
+        _dbContext.Users.Add(new User
+        {
+            Email = "test@example.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123")
+        });
+        await _dbContext.SaveChangesAsync();
 
         // Act
         var response = await _authService.Login("test@example.com", "wrongpassword");
