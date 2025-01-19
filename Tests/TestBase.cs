@@ -35,7 +35,7 @@ public abstract class TestBase : IDisposable
         Configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(
             [
-                new KeyValuePair<string, string?>("Jwt:Key", "MySuperSecureAndLongerKeywithsize128123456"),
+                new KeyValuePair<string, string?>("Jwt:Key", "tofood!aA1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8S9T0U1V2W3X4Y5Z6!"),
                 new KeyValuePair<string, string?>("Jwt:Issuer", "your-issuer"),
                 new KeyValuePair<string, string?>("Jwt:Audience", "your-audience")
             ])

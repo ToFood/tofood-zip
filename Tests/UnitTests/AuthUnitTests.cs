@@ -26,7 +26,7 @@ public class AuthServiceUnitTests
 
         // Mock do IConfiguration
         var mockConfiguration = new Mock<Microsoft.Extensions.Configuration.IConfiguration>();
-        mockConfiguration.Setup(config => config["Jwt:Key"]).Returns("MySuperSecureAndLongerKeywithsize128123456");
+        mockConfiguration.Setup(config => config["Jwt:Key"]).Returns("tofood!aA1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8S9T0U1V2W3X4Y5Z6!");
         mockConfiguration.Setup(config => config["Jwt:Issuer"]).Returns("your-issuer");
         mockConfiguration.Setup(config => config["Jwt:Audience"]).Returns("your-audience");
 

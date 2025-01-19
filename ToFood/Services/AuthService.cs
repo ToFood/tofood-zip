@@ -16,15 +16,20 @@ public class AuthService
 {
     private readonly ToFoodRelationalContext _dbRelationalContext;
     private readonly ILogger<AuthService> _logger;
-    private readonly string _jwtSecret = "MySuperSecureAndLongerKeywithsize128123456"; // Chave secreta do token
+    private readonly Microsoft.Extensions.Configuration.IConfiguration _configuration;
 
     /// <summary>
     /// Inicializa uma nova instância do serviço de autenticação.
     /// </summary>
-    public AuthService(ToFoodRelationalContext dbRelationalContext, ILogger<AuthService> logger)
+    public AuthService(
+        ToFoodRelationalContext dbRelationalContext,
+        ILogger<AuthService> logger,
+        Microsoft.Extensions.Configuration.IConfiguration configuration // Alterado para IConfiguration
+        )
     {
         _dbRelationalContext = dbRelationalContext;
         _logger = logger;
+        _configuration = configuration;
     }
 
 
@@ -62,7 +67,7 @@ public class AuthService
     private string GenerateJwtToken(User user)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.UTF8.GetBytes(_jwtSecret);
+        var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? "");
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {
@@ -71,8 +76,8 @@ public class AuthService
                 new Claim(ClaimTypes.NameIdentifier, user?.Id.ToString() ?? "")
             }),
             Expires = DateTime.UtcNow.AddHours(1),
-            Issuer = "your-issuer",
-            Audience = "your-audience",
+            Issuer = _configuration["Jwt:Issuer"], // Adiciona emissor
+            Audience = _configuration["Jwt:Audience"], // Adiciona audiência
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
         };
 
