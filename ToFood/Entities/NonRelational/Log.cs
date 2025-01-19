@@ -36,11 +36,6 @@ public class Log
     public string? ServiceName { get; set; }
 
     /// <summary>
-    /// Nome do método ou operação que gerou o log.
-    /// </summary>
-    public string? OperationName { get; set; }
-
-    /// <summary>
     /// Identificador único da requisição (para rastreamento).
     /// </summary>
     public string? RequestId { get; set; }
@@ -64,7 +59,21 @@ public class Log
     /// Informações adicionais ou metadados.
     /// </summary>
     public Dictionary<string, object> Metadata { get; set; } = new();
+
+    /// <summary>
+    /// Exceções / Erros
+    /// </summary>
     public string? Exception { get; set; }
+
+    /// <summary>
+    /// Nome do Controller
+    /// </summary>
+    public string? ControllerName { get; set; }
+
+    /// <summary>
+    /// Nome do Método
+    /// </summary>
+    public string? MethodName { get; set; }
 }
 
 /// <summary>

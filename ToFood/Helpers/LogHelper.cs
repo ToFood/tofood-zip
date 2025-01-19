@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http; // Necessário para acessar o contexto HTTP.
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using ToFood.Domain.Entities.NonRelational;
@@ -54,14 +55,18 @@ namespace ToFood.Domain.Helpers
         {
             if (!IsEnabled(logLevel)) return;
 
+            // Obtenha o fuso horário local
+            var localTimeZone = TimeZoneInfo.Local;
+
             // Cria um objeto de log enriquecido com informações do contexto HTTP.
             var logEntry = new Log
             {
                 Level = logLevel.ToString(),
                 Message = formatter(state, exception),
-                Timestamp = DateTime.UtcNow,
+                Timestamp = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, localTimeZone), // Converte UTC para o horário local
                 ServiceName = _categoryName,
-                OperationName = GetOperationName(state),
+                ControllerName = GetControllerName(state),
+                MethodName = GetMethodName(state),
                 RequestId = GetRequestId(),
                 User = GetUserContext(),
                 Request = GetRequestContext(),
@@ -79,12 +84,45 @@ namespace ToFood.Domain.Helpers
         }
 
         /// <summary>
-        /// Recupera o nome da operação atual, se disponível.
+        /// Recupera o nome da operação atual Controlador, se disponível no contexto HTTP.
         /// </summary>
-        private string? GetOperationName<TState>(TState state)
+        private string? GetControllerName<TState>(TState state)
         {
+            var routeData = _httpContextAccessor?.HttpContext?.GetRouteData();
+            if (routeData != null)
+            {
+                var controller = routeData.Values["controller"]?.ToString();
+
+                if (!string.IsNullOrEmpty(controller))
+                {
+                    return $"{controller}Controller";
+                }
+            }
+
+            // Se não for possível obter o nome do controlador/ação, retorna o estado (se for string)
             return state is string operationName ? operationName : null;
         }
+
+        /// <summary>
+        /// Recupera o nome da operação atual Método/Ação, se disponível no contexto HTTP.
+        /// </summary>
+        private string? GetMethodName<TState>(TState state)
+        {
+            var routeData = _httpContextAccessor?.HttpContext?.GetRouteData();
+            if (routeData != null)
+            {
+                var action = routeData.Values["action"]?.ToString();
+
+                if (!string.IsNullOrEmpty(action))
+                {
+                    return $"{action}";
+                }
+            }
+
+            // Se não for possível obter o nome do controlador/ação, retorna o estado (se for string)
+            return state is string operationName ? operationName : null;
+        }
+
 
         /// <summary>
         /// Recupera o ID único da requisição (se disponível no contexto HTTP).

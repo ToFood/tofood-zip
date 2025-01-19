@@ -18,23 +18,6 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Endpoint para registrar um novo usuário.
-    /// </summary>
-    /// <param name="email">O email do usuário a ser registrado.</param>
-    /// <param name="password">A senha do usuário a ser registrado.</param>
-    /// <returns>Uma resposta indicando o sucesso ou falha do registro.</returns>
-    [HttpPost("register")]
-    public async Task<IActionResult> Register(string email, string password)
-    {
-        var response = await _authService.Register(email, password);
-
-        if (!response.IsSuccess)
-            return BadRequest(response.Message); // Retorna um erro se o registro falhar
-
-        return Ok(response.Message); // Retorna uma mensagem de sucesso
-    }
-
-    /// <summary>
     /// Endpoint para autenticar um usuário e gerar um token JWT.
     /// </summary>
     /// <param name="email">O email do usuário.</param>
@@ -53,18 +36,5 @@ public class AuthController : ControllerBase
             response.Message, // Mensagem de sucesso
             response.Token    // Token JWT gerado
         });
-    }
-
-    /// <summary>
-    /// Endpoint para obter uma lista de todos os usuários registrados.
-    /// Requer autenticação.
-    /// </summary>
-    /// <returns>Uma lista de usuários com informações básicas.</returns>
-    [Authorize]
-    [HttpGet("users")]
-    public async Task<IActionResult> GetUsers()
-    {
-        var users = await _authService.GetUsers(); // Obtém os usuários do serviço
-        return Ok(users); // Retorna a lista de usuários
     }
 }
