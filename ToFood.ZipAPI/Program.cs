@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using System.Text;
@@ -7,7 +6,8 @@ using Microsoft.OpenApi.Models;
 using ToFood.Domain.Entities.NonRelational;
 using ToFood.Domain.Factories;
 using ToFood.Domain.Helpers;
-using ToFood.Domain.Services;
+using ToFood.Domain.Extensions;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,11 +45,8 @@ builder.Logging.ClearProviders();
 builder.Logging.AddProvider(new MongoDbLoggerProvider(logCollection, httpContextAccessor));
 
 // DI (Injeção de Dependência)
-builder.Services.AddScoped<ZipService>();
-builder.Services.AddScoped<YoutubeService>();
-builder.Services.AddScoped<LogHelper>();
-builder.Services.AddScoped<AuthService>();
-builder.Services.AddScoped<UserService>();
+// Registra os serviços do domínio
+builder.Services.AddDomainServices();
 
 // Adiciona o serviço de CORS
 builder.Services.AddCors(options =>
