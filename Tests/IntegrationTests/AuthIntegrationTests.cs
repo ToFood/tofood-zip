@@ -1,51 +1,48 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
 using ToFood.Domain.Entities.Relational;
 using ToFood.Domain.Services;
-using ToFood.Domain.DB.Relational;
 
 namespace ToFood.Tests.IntegrationTests;
 
 /// <summary>
 /// Classe de testes de integração para o serviço de autenticação (AuthService).
 /// </summary>
-public class AuthIntegrationTests
+public class AuthIntegrationTests : TestBase
 {
     private readonly AuthService _authService;
-    private readonly ToFoodRelationalContext _dbContext;
+    private readonly ILogger<AuthService> _logger;
 
     /// <summary>
     /// Construtor que inicializa a classe de testes.
     /// </summary>
     public AuthIntegrationTests()
     {
-        // Configurar o banco de dados In-Memory
-        var options = new DbContextOptionsBuilder<ToFoodRelationalContext>()
-            .UseInMemoryDatabase("AuthIntegrationTestDatabase")
-            .Options;
+        // Instanciar o logger real ou um mock
+        _logger = new LoggerFactory().CreateLogger<AuthService>();
 
-        _dbContext = new ToFoodRelationalContext(options);
-
-        // Configuração do IConfiguration
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                { "Jwt:Key", "tofood!aA1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8S9T0U1V2W3X4Y5Z6!" },
-                { "Jwt:Issuer", "your-issuer" },
-                { "Jwt:Audience", "your-audience" }
-            })
-            .Build();
-
-        // Logger real ou mock
-        var logger = new LoggerFactory().CreateLogger<AuthService>();
-
-        // Inicializa o AuthService com o contexto e as dependências configuradas
-        _authService = new AuthService(_dbContext, logger, configuration);
-
-        // Popula o banco de dados com dados iniciais
-        SeedDatabase();
+        // Inicializa o AuthService com o contexto e a configuração herdados de TestBase
+        _authService = new AuthService(RelationalContext, _logger, Configuration);
     }
+
+    /// <summary>
+    /// Popula o banco de dados com dados iniciais para os testes.
+    /// </summary>
+    protected override void SeedDatabase()
+    {
+        var passwordHash = BCrypt.Net.BCrypt.HashPassword("password123");
+
+        RelationalContext.Users.Add(new User
+        {
+            Email = "test@example.com",
+            PasswordHash = passwordHash
+        });
+
+        RelationalContext.SaveChanges();
+    }
+
+
+
 
     /// <summary>
     /// Testa o login de um usuário com credenciais válidas.
@@ -90,19 +87,4 @@ public class AuthIntegrationTests
         Assert.Equal("E-mail ou senha inválidos.", response.Message);
     }
 
-    /// <summary>
-    /// Popula o banco de dados com dados iniciais para os testes.
-    /// </summary>
-    private void SeedDatabase()
-    {
-        var passwordHash = BCrypt.Net.BCrypt.HashPassword("password123");
-
-        _dbContext.Users.Add(new User
-        {
-            Email = "test@example.com",
-            PasswordHash = passwordHash
-        });
-
-        _dbContext.SaveChanges();
-    }
 }
