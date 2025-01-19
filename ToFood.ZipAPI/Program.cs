@@ -29,16 +29,20 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
+// Registra o IHttpContextAccessor no contêiner de dependências
+builder.Services.AddHttpContextAccessor();
+
 // Configuração do banco de dados usando o DatabaseFactory
 DatabaseFactory.ConfigureDatabases(builder.Services, builder.Configuration);
 
 // Recupera a coleção de logs para o logger
 var serviceProvider = builder.Services.BuildServiceProvider();
 var logCollection = serviceProvider.GetRequiredService<IMongoCollection<Log>>();
+var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
 
 // Configura o logger customizado
 builder.Logging.ClearProviders();
-builder.Logging.AddProvider(new MongoDbLoggerProvider(logCollection));
+builder.Logging.AddProvider(new MongoDbLoggerProvider(logCollection, httpContextAccessor));
 
 // DI (Injeção de Dependência)
 builder.Services.AddScoped<ZipService>();

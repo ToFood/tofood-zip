@@ -7,7 +7,6 @@ using System.Text;
 using ToFood.Domain.DB.Relational;
 using ToFood.Domain.Entities.NonRelational;
 using ToFood.Domain.Entities.Relational;
-using ToFood.Domain.Helpers;
 
 namespace ToFood.Domain.Services;
 
@@ -21,12 +20,9 @@ public class AuthService
     private readonly string _jwtSecret = "MySuperSecureAndLongerKeywithsize128123456"; // Chave secreta do token
 
     /// <summary>
-    /// Inicializa uma nova instância do serviço de autenticação com o contexto do banco de dados e LogHelper.
+    /// Inicializa uma nova instância do serviço de autenticação.
     /// </summary>
-    public AuthService(
-        ToFoodRelationalContext dbRelationalContext,
-        ILogger<AuthService> logger
-        )
+    public AuthService(ToFoodRelationalContext dbRelationalContext, ILogger<AuthService> logger)
     {
         _dbRelationalContext = dbRelationalContext;
         _logger = logger;
@@ -34,86 +30,66 @@ public class AuthService
 
     /// <summary>
     /// Registra um novo usuário no sistema.
+    /// </summary>
     /// <param name="email">O email do usuário.</param>
     /// <param name="password">A senha do usuário.</param>
     /// <returns>Um objeto contendo o resultado da operação.</returns>
-    /// </summary>
     public async Task<AuthResponse> Register(string email, string password)
     {
-        _logger.LogInformation("Exemplo de log no MongoDB.");
+        var requestId = Guid.NewGuid().ToString(); // Identificador único para rastrear a requisição
+        _logger.LogInformation("Iniciando registro para usuário @{Email} | RequestId: @{RequestId}", email, requestId);
 
+        // Verifica se o email já está em uso
         if (await _dbRelationalContext.Users.AnyAsync(u => u.Email == email))
         {
-            return new AuthResponse
-            {
-                IsSuccess = false,
-                Message = "Email já está em uso."
-            };
+            _logger.LogWarning("Falha no registro: Email @{Email} já está em uso | RequestId: @{RequestId}", email, requestId);
+            return new AuthResponse { IsSuccess = false, Message = "Email já está em uso." };
         }
 
+        // Criação do hash de senha e instância do usuário
         var passwordHash = BCrypt.Net.BCrypt.HashPassword(password);
-
-        var user = new User
-        {
-            Email = email,
-            PasswordHash = passwordHash
-        };
+        var user = new User { Email = email, PasswordHash = passwordHash };
 
         try
         {
+            // Salva o usuário no banco de dados
             _dbRelationalContext.Users.Add(user);
             await _dbRelationalContext.SaveChangesAsync();
 
-            _logger.LogInformation("Exemplo de log no MongoDB.");
-
-            return new AuthResponse
-            {
-                IsSuccess = true,
-                Message = "Usuário registrado com sucesso!"
-            };
+            _logger.LogInformation("Registro concluído para usuário @{Email} | UserId: @{UserId} | RequestId: {RequestId}", email, user.Id, requestId);
+            return new AuthResponse { IsSuccess = true, Message = "Usuário registrado com sucesso!" };
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            _logger.LogInformation("Exemplo de log no MongoDB.");
-
-            return new AuthResponse
-            {
-                IsSuccess = false,
-                Message = "Erro interno no servidor."
-            };
+            _logger.LogError(ex, "Erro ao registrar usuário {Email} | RequestId: {RequestId} | Mensagem: {ErrorMessage}", email, requestId, ex.Message);
+            return new AuthResponse { IsSuccess = false, Message = "Erro interno no servidor." };
         }
     }
 
     /// <summary>
-    /// Realiza o login de um usuário, verificando as credenciais fornecidas e retornando um token JWT.
+    /// Realiza o login de um usuário.
     /// </summary>
+    /// <param name="email">O email do usuário.</param>
+    /// <param name="password">A senha do usuário.</param>
+    /// <returns>Um objeto contendo o resultado da operação.</returns>
     public async Task<AuthResponse> Login(string email, string password)
     {
-        _logger.LogInformation("Exemplo de log no MongoDB.");
+        var requestId = Guid.NewGuid().ToString(); // Identificador único para rastrear a requisição
+        _logger.LogInformation("Iniciando login para usuário {Email} | RequestId: {RequestId}", email, requestId);
 
+        // Busca o usuário no banco de dados
         var user = await _dbRelationalContext.Users.FirstOrDefaultAsync(u => u.Email == email);
-
         if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
         {
-            _logger.LogInformation("Exemplo de log no MongoDB.");
-
-            return new AuthResponse
-            {
-                IsSuccess = false,
-                Message = "E-mail ou senha inválidos."
-            };
+            _logger.LogWarning("Falha no login: Credenciais inválidas para usuário {Email} | RequestId: {RequestId}", email, requestId);
+            return new AuthResponse { IsSuccess = false, Message = "E-mail ou senha inválidos." };
         }
 
+        // Gera o token JWT para o usuário
         var token = GenerateJwtToken(user);
 
-        _logger.LogInformation("Exemplo de log no MongoDB.");
-
-        return new AuthResponse
-        {
-            IsSuccess = true,
-            Message = "Login bem-sucedido!",
-            Token = token
-        };
+        _logger.LogInformation("Login bem-sucedido para usuário {Email} | UserId: {UserId} | RequestId: {RequestId}", email, user.Id, requestId);
+        return new AuthResponse { IsSuccess = true, Message = "Login bem-sucedido!", Token = token };
     }
 
     /// <summary>
@@ -122,19 +98,22 @@ public class AuthService
     /// <returns>Uma lista de usuários com seus IDs, emails e datas de criação.</returns>
     public async Task<object> GetUsers()
     {
-        return await _dbRelationalContext.Users
-            .Select(u => new
-            {
-                u.Id,
-                u.Email,
-                u.CreatedAt
-            })
+        var requestId = Guid.NewGuid().ToString(); // Identificador único para rastrear a requisição
+        _logger.LogInformation("Obtendo lista de usuários | RequestId: {RequestId}", requestId);
+
+        var users = await _dbRelationalContext.Users
+            .Select(u => new { u.Id, u.Email, u.CreatedAt })
             .ToListAsync();
+
+        _logger.LogInformation("Lista de usuários obtida com sucesso | Total: {UserCount} | RequestId: {RequestId}", users.Count, requestId);
+        return users;
     }
 
     /// <summary>
     /// Gera um token JWT para autenticar o usuário.
     /// </summary>
+    /// <param name="user">O usuário para o qual o token será gerado.</param>
+    /// <returns>O token JWT gerado.</returns>
     private string GenerateJwtToken(User user)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
@@ -142,8 +121,7 @@ public class AuthService
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {
-            Subject = new ClaimsIdentity(new[]
-            {
+            Subject = new ClaimsIdentity(new[] {
                 new Claim(ClaimTypes.Name, user?.Email ?? ""),
                 new Claim(ClaimTypes.NameIdentifier, user?.Id.ToString() ?? "")
             }),
@@ -154,27 +132,17 @@ public class AuthService
         };
 
         var token = tokenHandler.CreateToken(tokenDescriptor);
+        _logger.LogDebug("Token gerado para usuário {UserId} | Expiração: {Expiration}", user?.Id, tokenDescriptor.Expires);
         return tokenHandler.WriteToken(token);
     }
 }
 
 /// <summary>
-/// Representa a resposta das operações de autenticação, incluindo mensagens e tokens.
+/// Representa a resposta das operações de autenticação.
 /// </summary>
 public class AuthResponse
 {
-    /// <summary>
-    /// Indica se a operação foi bem-sucedida.
-    /// </summary>
     public bool IsSuccess { get; set; }
-
-    /// <summary>
-    /// Mensagem de retorno da operação.
-    /// </summary>
     public string? Message { get; set; }
-
-    /// <summary>
-    /// Token JWT gerado, se aplicável.
-    /// </summary>
     public string? Token { get; set; }
 }
