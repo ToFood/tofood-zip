@@ -131,11 +131,20 @@ public class ZipService
         var userId = JWTHelper.GetAuthenticatedUserId(_httpContextAccessor);
         _logger.LogInformation("Usuário autenticado: {UserId}.", userId);
 
+        byte[] VideoData;
+        using (var memoryStream = new MemoryStream())
+        {
+            await file.CopyToAsync(memoryStream);
+            VideoData = memoryStream.ToArray();
+        }
+
+        // Cria o registro do vídeo no banco
         var video = new Video
         {
             Id = Guid.NewGuid(),
             FileName = file.FileName,
-            FilePath = "",
+            FilePath = "", // Opcional se o caminho não for necessário
+            FileData = VideoData, // Armazena os dados binários
             Status = VideoStatus.Processing,
             UserId = userId
         };
@@ -188,13 +197,13 @@ public class ZipService
             System.IO.Compression.ZipFile.CreateFromDirectory(outputFolder, zipFilePath);
 
             // Lê os bytes do ZIP
-            byte[] fileData;
+            byte[] zipData;
             using (var fileStream = new FileStream(zipFilePath, FileMode.Open, FileAccess.Read))
             {
                 using (var memoryStream = new MemoryStream())
                 {
                     await fileStream.CopyToAsync(memoryStream);
-                    fileData = memoryStream.ToArray();
+                    zipData = memoryStream.ToArray();
                 }
             }
 
@@ -205,7 +214,7 @@ public class ZipService
                 Status = ZipStatus.Completed,
                 VideoId = video.Id,
                 UserId = userId,
-                FileData = fileData, // Salva os bytes no banco
+                FileData = zipData, // Salva os bytes no banco
 
             };
 
@@ -229,14 +238,22 @@ public class ZipService
     }
 
     /// <summary>
-    /// Busca um arquivo ZIP armazenado no banco ou sistema de arquivos.
+    /// Busca um arquivo ZIP armazenado no banco.
     /// </summary>
     /// <param name="zipId">Identificador do ZIP.</param>
     /// <returns>Bytes do arquivo ZIP e o nome do arquivo.</returns>
     public async Task<(byte[]?, string)> GetZipFileAsync(Guid zipId)
     {
         var zipFile = await _dbRelationalContext.ZipFiles
-            .FirstOrDefaultAsync(z => z.Id == zipId);
+        .AsNoTracking()
+        .Where(z => z.Id == zipId)
+        .Select(z => new
+        {
+            VideoFileName = z.Video != null ? Path.GetFileNameWithoutExtension(z.Video.FileName) : null, // Remove a extensão
+            z.FileData, // Dados do arquivo ZIP
+            z.FilePath  // Caminho do arquivo ZIP (se necessário)
+        })
+        .FirstOrDefaultAsync();
 
         if (zipFile == null)
             return (null, string.Empty);
@@ -244,12 +261,12 @@ public class ZipService
         if (zipFile.FileData != null)
         {
             // Retorna os bytes do banco
-            return (zipFile.FileData, $"zip_{zipId}.zip");
+            return (zipFile.FileData, $"{zipFile?.VideoFileName}.zip");
         }
-        else if (!string.IsNullOrEmpty(zipFile.FilePath) && System.IO.File.Exists(zipFile.FilePath))
+        else if (!string.IsNullOrEmpty(zipFile.FilePath) && File.Exists(zipFile.FilePath))
         {
             // Lê os bytes do sistema de arquivos
-            var fileBytes = await System.IO.File.ReadAllBytesAsync(zipFile.FilePath);
+            var fileBytes = await File.ReadAllBytesAsync(zipFile.FilePath);
             return (fileBytes, Path.GetFileName(zipFile.FilePath));
         }
 

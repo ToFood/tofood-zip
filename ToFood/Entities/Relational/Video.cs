@@ -68,4 +68,10 @@ public class Video
     [Required]
     [Column("updated_at")]
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    /// <summary>
+    /// Dados binários do vídeo.
+    /// </summary>
+    [Column("file_data")]
+    public byte[]? FileData { get; set; }
 }

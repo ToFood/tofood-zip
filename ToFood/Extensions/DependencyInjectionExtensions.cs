@@ -17,6 +17,7 @@ public static class DependencyInjectionExtensions
         services.AddScoped<AuthService>();
         services.AddScoped<UserService>();
         services.AddScoped<ZipService>();
+        services.AddScoped<VideoService>();
         services.AddScoped<YoutubeService>();
         services.AddScoped<LogHelper>();
 

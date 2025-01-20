@@ -11,10 +11,12 @@ namespace ToFood.ZipAPI.Controller;
 public class VideoController : ControllerBase
 {
     private readonly YoutubeService _youtubeService;
+    private readonly VideoService _videoService;
 
-    public VideoController(YoutubeService youtubeService)
+    public VideoController(YoutubeService youtubeService, VideoService videoService)
     {
         _youtubeService = youtubeService;
+        _videoService = videoService;
     }
 
     /// <summary>
@@ -68,4 +70,28 @@ public class VideoController : ControllerBase
 
         }
     }
+
+    /// <summary>
+    /// Faz o Download do Video
+    /// </summary>
+    /// <param name="videoId"></param>
+    /// <returns></returns>
+    [HttpGet("download/{videoId}")]
+    public async Task<IActionResult> DownloadVideo(Guid videoId)
+    {
+        try
+        {
+            var (videoBytes, fileName) = await _videoService.DownloadVideo(videoId);
+
+            if (videoBytes == null)
+                return NotFound("Vídeo não encontrado.");
+
+            return File(videoBytes, "video/mp4", fileName);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Erro ao baixar o vídeo: {ex.Message}");
+        }
+    }
+
 }
