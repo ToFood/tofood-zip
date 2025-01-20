@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ToFood.Domain.Helpers;
 using ToFood.Domain.Services;
 
 namespace ToFood.ZipAPI.Controller;
@@ -70,6 +71,27 @@ public class ZipController : ControllerBase
         catch (Exception ex)
         {
             return StatusCode(500, $"Erro ao baixar o arquivo ZIP: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Lista os Zips vinculados ao usuário logado.
+    /// </summary>
+    /// <returns>Uma lista com os vídeos do usuário.</returns>
+    [HttpGet("list")]
+    public async Task<IActionResult> ListZipsByUser()
+    {
+        try
+        {
+            // Obtém os vídeos do serviço
+            var videos = await _zipService.ListZipsByUser();
+
+            // Retorna a lista de vídeos
+            return Ok(videos);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Erro ao listar vídeos: {ex.Message}");
         }
     }
 }

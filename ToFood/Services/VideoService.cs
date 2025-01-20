@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ToFood.Domain.DB.Relational;
 using ToFood.Domain.DTOs.Response;
@@ -10,11 +11,13 @@ public class VideoService
 {
     
     private readonly ToFoodRelationalContext _dbRelationalContext;
+    private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogger<VideoService> _logger;
 
-    public VideoService(ToFoodRelationalContext dbContext, ILogger<VideoService> logger)
+    public VideoService(ToFoodRelationalContext dbContext, IHttpContextAccessor httpContextAccessor, ILogger<VideoService> logger)
     {
         _dbRelationalContext = dbContext;
+        _httpContextAccessor = httpContextAccessor;
         _logger = logger;
     }
 
@@ -64,15 +67,23 @@ public class VideoService
     /// </summary>
     /// <param name="userId">ID do usuário.</param>
     /// <returns>Lista de vídeos vinculados ao usuário.</returns>
-    public async Task<List<VideoResponse>> ListVideosByUser(Guid userId)
+    public async Task<List<VideoResponse>> ListVideosByUser()
     {
+        // Recupera o ID do usuário logado do JWT
+        var userId = JWTHelper.GetAuthenticatedUserId(_httpContextAccessor);
+
+        if (userId == Guid.Empty)
+        {
+            return new List<VideoResponse>();
+        };
+
         return await _dbRelationalContext.Videos
             .AsNoTracking()
             .Where(v => v.UserId == userId)
             .Select(v => new VideoResponse
             {
                 Id = v.Id,
-                FileName = v.FileName,
+                FileName = Path.GetFileNameWithoutExtension(v.FileName),
                 CreatedAt = v.CreatedAt,
                 Status = v.Status.ToEnumDescription(),
             })

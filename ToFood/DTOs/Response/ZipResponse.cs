@@ -1,32 +1,32 @@
 ﻿namespace ToFood.Domain.DTOs.Response;
 
 /// <summary>
-/// Representa um vídeo na listagem.
+/// Representa um Zip na listagem.
 /// </summary>
-public class VideoResponse
+public class ZipResponse
 {
     /// <summary>
-    /// Identificador do vídeo.
+    /// Identificador do Zip.
     /// </summary>
     public Guid Id { get; set; }
 
     /// <summary>
-    /// Nome do arquivo do vídeo.
+    /// Nome do arquivo do Zip.
     /// </summary>
     public string? FileName { get; set; }
 
     /// <summary>
-    /// Data de criação do vídeo.
+    /// Data de criação do Zip.
     /// </summary>
     public DateTime CreatedAt { get; set; }
 
     /// <summary>
-    /// Status do vídeo.
+    /// Status do Zip.
     /// </summary>
     public string? Status { get; set; }
 
     /// <summary>
-    /// Extensão do vídeo.
+    /// Extensão do Zip.
     /// </summary>
-    public string? Extension { get; set; } = "mp4";
+    public string? Extension { get; set; } = "zip";
 }

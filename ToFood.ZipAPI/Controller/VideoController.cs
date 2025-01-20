@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using ToFood.Domain.Services;
 using ToFood.Domain.DTOs.Request;
 using ToFood.Domain.DTOs.Response;
-using ToFood.Domain.Helpers;
 
 namespace ToFood.ZipAPI.Controller;
 
@@ -13,13 +12,11 @@ public class VideoController : ControllerBase
 {
     private readonly YoutubeService _youtubeService;
     private readonly VideoService _videoService;
-    private readonly IHttpContextAccessor _contextAccessor;
 
-    public VideoController(YoutubeService youtubeService, VideoService videoService, IHttpContextAccessor contextAccessor)
+    public VideoController(YoutubeService youtubeService, VideoService videoService)
     {
         _youtubeService = youtubeService;
         _videoService = videoService;
-        _contextAccessor = contextAccessor;
     }
 
     /// <summary>
@@ -102,18 +99,12 @@ public class VideoController : ControllerBase
     /// </summary>
     /// <returns>Uma lista com os vídeos do usuário.</returns>
     [HttpGet("list")]
-    public async Task<IActionResult> ListVideos()
+    public async Task<IActionResult> ListVideosByUser()
     {
         try
         {
-            // Recupera o ID do usuário logado do JWT
-            var userId = JWTHelper.GetAuthenticatedUserId(_contextAccessor);
-
-            if (userId == Guid.Empty || userId == null)
-                return Unauthorized("Usuário não autenticado ou ID inválido.");
-
             // Obtém os vídeos do serviço
-            var videos = await _videoService.ListVideosByUser(userId);
+            var videos = await _videoService.ListVideosByUser();
 
             // Retorna a lista de vídeos
             return Ok(videos);

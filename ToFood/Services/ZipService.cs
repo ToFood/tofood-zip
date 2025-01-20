@@ -8,6 +8,7 @@ using ToFood.Domain.Utils;
 using ToFood.Domain.Helpers;
 using Xabe.FFmpeg;
 using Microsoft.EntityFrameworkCore;
+using ToFood.Domain.DTOs.Response;
 
 namespace ToFood.Domain.Services;
 
@@ -271,6 +272,34 @@ public class ZipService
         }
 
         return (null, string.Empty);
+    }
+
+    /// <summary>
+    /// Lista os Zips vinculados a um usuário.
+    /// </summary>
+    /// <param name="userId">ID do usuário.</param>
+    /// <returns>Lista de Zips vinculados ao usuário.</returns>
+    public async Task<List<ZipResponse>> ListZipsByUser()
+    {
+        // Recupera o ID do usuário logado do JWT
+        var userId = JWTHelper.GetAuthenticatedUserId(_httpContextAccessor);
+
+        if (userId == Guid.Empty)
+        {
+            return new List<ZipResponse>();
+        }
+
+        return await _dbRelationalContext.ZipFiles
+            .AsNoTracking()
+            .Where(z => z.UserId == userId)
+            .Select(z => new ZipResponse
+            {
+                Id = z.Id,
+                FileName = z.Video != null ? Path.GetFileNameWithoutExtension(z.Video.FileName) : null, // Remove a extensão,
+                CreatedAt = z.CreatedAt,
+                Status = z.Status.ToEnumDescription(),
+            })
+            .ToListAsync();
     }
 
 }
