@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Http; // Necessário para acessar o contexto HTTP.
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using ToFood.Domain.Entities.NonRelational;
+using ToFood.Domain.Helpers;
 
-namespace ToFood.Domain.Helpers;
+namespace ToFood.Domain.Extensions;
 
 /// <summary>
 /// Implementação de um logger personalizado que grava logs no MongoDB.

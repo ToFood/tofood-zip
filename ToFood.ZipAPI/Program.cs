@@ -42,7 +42,7 @@ var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccesso
 
 // Configura o logger customizado
 builder.Logging.ClearProviders();
-builder.Logging.AddProvider(new MongoLoggerProvider(logCollection, httpContextAccessor));
+builder.Logging.AddProvider(new MongoDBLoggerProvider(logCollection, httpContextAccessor));
 
 // DI (Injeção de Dependência)
 // Registra os serviços do domínio

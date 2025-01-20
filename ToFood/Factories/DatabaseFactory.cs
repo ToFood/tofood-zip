@@ -102,7 +102,7 @@ public static class DatabaseFactory
 
                 // Registra o contexto geral para MongoDB
                 services.AddSingleton<ToFoodNonRelationalContext>(_ =>
-                    new MongoContext(mongoConnectionString, mongoDatabaseName));
+                    new MongoDBContext(mongoConnectionString, mongoDatabaseName));
 
                 // Registra a coleção de logs como serviço
                 services.AddSingleton(_ => mongoDatabase.GetCollection<Log>("logs"));
