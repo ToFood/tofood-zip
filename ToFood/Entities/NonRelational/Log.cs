@@ -40,10 +40,7 @@ public class Log
     /// </summary>
     public string? RequestId { get; set; }
 
-    /// <summary>
-    /// Informações do usuário que realizou a operação.
-    /// </summary>
-    public UserLog? User { get; set; }
+    public string? UserId { get; set; }
 
     /// <summary>
     /// Dados da requisição associados ao log.

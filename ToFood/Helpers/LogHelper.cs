@@ -68,7 +68,7 @@ namespace ToFood.Domain.Helpers
                 ControllerName = GetControllerName(state),
                 MethodName = GetMethodName(state),
                 RequestId = GetRequestId(),
-                User = GetUserContext(),
+                UserId = JWTHelper.GetAuthenticatedUserId(_httpContextAccessor).ToString() ?? null,
                 Request = GetRequestContext(),
                 Response = GetResponseContext(),
                 Metadata = new Dictionary<string, object>
@@ -133,28 +133,6 @@ namespace ToFood.Domain.Helpers
         }
 
         /// <summary>
-        /// Recupera informações do usuário autenticado (se disponível).
-        /// </summary>
-        private UserLog? GetUserContext()
-        {
-            var user = _httpContextAccessor?.HttpContext?.User;
-            if (user == null || !user.Identity?.IsAuthenticated == true) 
-            {
-                return new UserLog
-                {
-                    UserId = "Unknown",
-                    UserName = "NoAuth"
-                };
-            }
-
-            return new UserLog
-            {
-                UserId = user.FindFirst("sub")?.Value ?? "Unknown", // ID do usuário.
-                UserName = user.Identity?.Name // Nome do usuário.
-            };
-        }
-
-        /// <summary>
         /// Recupera informações da requisição HTTP (incluindo o corpo, se disponível).
         /// </summary>
         private RequestLog? GetRequestContext()
@@ -163,7 +141,7 @@ namespace ToFood.Domain.Helpers
             if (request == null) return null;
 
             // Lê o corpo da requisição
-            var requestBody = GetRequestBodyAsync(request).Result;
+            var requestBody = ""; //GetRequestBodyAsync(request).Result; // Comentei aqui pq o Body fica muito grande por causa dos Arquivos
 
             return new RequestLog
             {

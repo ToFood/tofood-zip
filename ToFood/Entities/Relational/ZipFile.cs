@@ -17,7 +17,7 @@ public class ZipFile
     [Required]
     [MaxLength(1024)]
     [Column("file_path")]
-    public string FilePath { get; set; }
+    public string? FilePath { get; set; }
 
     [Required]
     [Column("status")]
@@ -28,7 +28,7 @@ public class ZipFile
     public Guid VideoId { get; set; }
 
     // Relacionamento com o vídeo
-    public Video Video { get; set; }
+    public Video? Video { get; set; }
 
     [Required]
     [Column("created_at")]
@@ -37,4 +37,11 @@ public class ZipFile
     [Required]
     [Column("updated_at")]
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    [Required]
+    [Column("user_id")]
+    public Guid UserId { get; set; }
+
+    // Relacionamento com o usuário
+    public User? User { get; set; }
 }
