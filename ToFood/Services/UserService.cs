@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using ToFood.Domain.DB.Relational;
 using ToFood.Domain.Entities.Relational;
 using ToFood.Domain.DTOs.Request;
+using ToFood.Domain.Helpers;
 
 
 
@@ -38,23 +39,23 @@ public class UserService
         if (string.IsNullOrWhiteSpace(registerUserRequest.Email))
         {
             // Lógica para tratar email nulo, vazio ou composto apenas por espaços
-            _logger.LogWarning("Falha no registro: Email não fornecido ou inválido | @Request: {Request}", RequestSanitizer.Sanitize(registerUserRequest));
+            _logger.LogWarning("Falha no registro: Email não fornecido ou inválido | @Request: {Request}", SanitizerHelper.Sanitize(registerUserRequest));
             throw new ArgumentException("O email não pode ser nulo ou vazio.");
         }
 
         if (string.IsNullOrWhiteSpace(registerUserRequest.Password))
         {
             // Lógica para tratar senha nula, vazia ou composta apenas por espaços
-            _logger.LogWarning("Falha no registro: Email não fornecido ou inválido | @Request: {Request}", RequestSanitizer.Sanitize(registerUserRequest));
+            _logger.LogWarning("Falha no registro: Email não fornecido ou inválido | @Request: {Request}", SanitizerHelper.Sanitize(registerUserRequest));
             throw new ArgumentException("A senha não pode ser nula ou vazia.");
         }
 
-        _logger.LogInformation("Iniciando registro para @Email {Email} | @Request: {Request}", registerUserRequest.Email, RequestSanitizer.Sanitize(registerUserRequest));
+        _logger.LogInformation("Iniciando registro para @Email {Email} | @Request: {Request}", registerUserRequest.Email, SanitizerHelper.Sanitize(registerUserRequest));
 
         // Verifica se o email já está em uso
         if (await _dbRelationalContext.Users.AnyAsync(u => u.Email == registerUserRequest.Email))
         {
-            _logger.LogWarning("Falha no registro: @Email {Email} já está em uso | @Request: {Request}", registerUserRequest.Email, RequestSanitizer.Sanitize(registerUserRequest));
+            _logger.LogWarning("Falha no registro: @Email {Email} já está em uso | @Request: {Request}", registerUserRequest.Email, SanitizerHelper.Sanitize(registerUserRequest));
             return new UserResponse { IsSuccess = false, Message = "Email já está em uso." };
         }
 
@@ -74,12 +75,12 @@ public class UserService
             _dbRelationalContext.Users.Add(user);
             await _dbRelationalContext.SaveChangesAsync();
 
-            _logger.LogInformation("Registro concluído para @Email {Email} | @Request: {Request}", registerUserRequest.Email, RequestSanitizer.Sanitize(registerUserRequest));
+            _logger.LogInformation("Registro concluído para @Email {Email} | @Request: {Request}", registerUserRequest.Email, SanitizerHelper.Sanitize(registerUserRequest));
             return new UserResponse { IsSuccess = true, Message = "Usuário registrado com sucesso!" };
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao registrar @Email {Email} | @Request: {Request} | @ErrorMessage: {ErrorMessage}", registerUserRequest.Email, RequestSanitizer.Sanitize(registerUserRequest), ex.Message);
+            _logger.LogError(ex, "Erro ao registrar @Email {Email} | @Request: {Request} | @ErrorMessage: {ErrorMessage}", registerUserRequest.Email, SanitizerHelper.Sanitize(registerUserRequest), ex.Message);
             return new UserResponse { IsSuccess = false, Message = "Erro interno no servidor." };
         }
     }

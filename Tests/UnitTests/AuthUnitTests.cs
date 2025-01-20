@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using ToFood.Domain.Entities.Relational;
 using ToFood.Domain.Services;
 

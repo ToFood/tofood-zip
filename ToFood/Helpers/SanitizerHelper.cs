@@ -1,4 +1,6 @@
-﻿public static class RequestSanitizer
+﻿namespace ToFood.Domain.Helpers;
+
+public static class SanitizerHelper
 {
     /// <summary>
     /// Sanitiza as propriedades sensíveis de um objeto.
