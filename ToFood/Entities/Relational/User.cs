@@ -28,6 +28,7 @@ public class User
     /// Email do usuário.
     /// </summary>
     [Required(ErrorMessage = "O email do usuário é obrigatório.")]
+    [EmailAddress(ErrorMessage = "O email informado não é válido.")]
     [MaxLength(255, ErrorMessage = "O email do usuário não pode exceder 255 caracteres.")]
     [Column("email")]
     public string? Email { get; set; }
