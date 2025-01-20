@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using ToFood.Domain.DB.Relational;
 using ToFood.Domain.Entities.Relational;
 using ToFood.Domain.DTOs.Request;
-using ToFood.Domain.DTOs.Response;
 
 
 
@@ -36,8 +35,21 @@ public class UserService
     /// <returns>Um objeto contendo o resultado da operação.</returns>
     public async Task<UserResponse> Register(RegisterUserRequest registerUserRequest)
     {
-        var requestId = Guid.NewGuid().ToString(); // Identificador único para rastrear a requisição
-        _logger.LogInformation("Iniciando registro para usuário @{Email} | Request: @{Request}", registerUserRequest.Email, registerUserRequest);
+        if (string.IsNullOrWhiteSpace(registerUserRequest.Email))
+        {
+            // Lógica para tratar email nulo, vazio ou composto apenas por espaços
+            _logger.LogWarning("Falha no registro: Email não fornecido ou inválido | Request: {@Request}", registerUserRequest);
+            throw new ArgumentException("O email não pode ser nulo ou vazio.");
+        }
+
+        if (string.IsNullOrWhiteSpace(registerUserRequest.Password))
+        {
+            // Lógica para tratar senha nula, vazia ou composta apenas por espaços
+            _logger.LogWarning("Falha no registro: Senha não fornecida ou inválida | Request: {@Request}", registerUserRequest);
+            throw new ArgumentException("A senha não pode ser nula ou vazia.");
+        }
+
+        _logger.LogInformation("Iniciando registro para usuário @{Email} | Request: @{Request}", registerUserRequest.Email, registerUserRequest.ToString());
 
         // Verifica se o email já está em uso
         if (await _dbRelationalContext.Users.AnyAsync(u => u.Email == registerUserRequest.Email))
@@ -78,14 +90,13 @@ public class UserService
     /// <returns>Uma lista de usuários com seus IDs, nomes, emails, telefones e datas de criação.</returns>
     public async Task<object> GetUsers()
     {
-        var requestId = Guid.NewGuid().ToString(); // Identificador único para rastrear a requisição
-        _logger.LogInformation("Obtendo lista de usuários | RequestId: @{RequestId}", requestId);
+        _logger.LogInformation("Obtendo lista de usuários");
 
         var users = await _dbRelationalContext.Users
             .Select(u => new { u.Id, u.FullName, u.Email, u.Phone, u.CreatedAt })
             .ToListAsync();
 
-        _logger.LogInformation("Lista de usuários obtida com sucesso | Total: @{UserCount} | RequestId: @{RequestId}", users.Count, requestId);
+        _logger.LogInformation("Lista de usuários obtida com sucesso | Total: @{UserCount}", users.Count);
         return users;
     }
 }

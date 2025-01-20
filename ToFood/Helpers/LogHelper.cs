@@ -155,21 +155,49 @@ namespace ToFood.Domain.Helpers
         }
 
         /// <summary>
-        /// Recupera informações da requisição HTTP (se disponível).
+        /// Recupera informações da requisição HTTP (incluindo o corpo, se disponível).
         /// </summary>
         private RequestLog? GetRequestContext()
         {
             var request = _httpContextAccessor?.HttpContext?.Request;
             if (request == null) return null;
 
+            // Lê o corpo da requisição
+            var requestBody = GetRequestBodyAsync(request).Result;
+
             return new RequestLog
             {
                 Url = request.Path.ToString(),
                 Method = request.Method,
                 Headers = request.Headers.ToDictionary(h => h.Key, h => string.Join(", ", h.Value)),
-                Body = null // Corpo da requisição pode ser adicionado aqui se necessário.
+                Body = requestBody
             };
         }
+
+
+        /// <summary>
+        /// Pega o Body da requisição
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        private async Task<string?> GetRequestBodyAsync(HttpRequest request)
+        {
+            if (request.Body == null || !request.Body.CanRead)
+                return null;
+
+            // Permite que o stream da requisição seja lido novamente
+            request.EnableBuffering();
+
+            // Lê o corpo da requisição
+            using (var reader = new StreamReader(request.Body, leaveOpen: true))
+            {
+                var body = await reader.ReadToEndAsync();
+                request.Body.Position = 0; // Reseta a posição do stream para permitir que outros componentes leiam o corpo
+                return body;
+            }
+        }
+
+
 
         /// <summary>
         /// Recupera informações da resposta HTTP (se disponível).

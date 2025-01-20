@@ -6,11 +6,6 @@
 public class RegisterUserRequest
 {
     /// <summary>
-    /// ID da Requisição
-    /// </summary>
-    public Guid Id { get; set; } = Guid.NewGuid();
-
-    /// <summary>
     /// Nome completo do usuário.
     /// </summary>
     public string? FullName { get; set; }
