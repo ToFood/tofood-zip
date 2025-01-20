@@ -145,7 +145,7 @@ public class ZipService
             FileName = file.FileName,
             FilePath = "", // Opcional se o caminho não for necessário
             FileData = VideoData, // Armazena os dados binários
-            Status = VideoStatus.Processing,
+            Status = VideoStatus.Completed,
             UserId = userId
         };
 

@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ToFood.Domain.DB.Relational;
+using ToFood.Domain.DTOs.Response;
+using ToFood.Domain.Helpers;
 
 namespace ToFood.Domain.Services;
 
@@ -57,5 +59,24 @@ public class VideoService
         return (videoData.FileData, $"{videoData.FileName}.mp4");
     }
 
+    /// <summary>
+    /// Lista os vídeos vinculados a um usuário.
+    /// </summary>
+    /// <param name="userId">ID do usuário.</param>
+    /// <returns>Lista de vídeos vinculados ao usuário.</returns>
+    public async Task<List<VideoResponse>> ListVideosByUser(Guid userId)
+    {
+        return await _dbRelationalContext.Videos
+            .AsNoTracking()
+            .Where(v => v.UserId == userId)
+            .Select(v => new VideoResponse
+            {
+                Id = v.Id,
+                FileName = v.FileName,
+                CreatedAt = v.CreatedAt,
+                Status = v.Status.ToEnumDescription(),
+            })
+            .ToListAsync();
+    }
 
 }
