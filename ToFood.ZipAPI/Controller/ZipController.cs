@@ -48,4 +48,28 @@ public class ZipController : ControllerBase
             }
         }
     }
+
+    /// <summary>
+    /// Retorna um arquivo ZIP armazenado com base no ID.
+    /// </summary>
+    /// <param name="zipId">Identificador do arquivo ZIP.</param>
+    /// <returns>O arquivo ZIP solicitado.</returns>
+    [HttpGet("download/{zipId}")]
+    public async Task<IActionResult> DownloadZip(Guid zipId)
+    {
+        try
+        {
+            // Busca o ZIP no banco ou sistema de arquivos
+            var (zipBytes, fileName) = await _zipService.GetZipFileAsync(zipId);
+
+            if (zipBytes == null)
+                return NotFound("Arquivo ZIP não encontrado.");
+
+            return File(zipBytes, "application/zip", fileName);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Erro ao baixar o arquivo ZIP: {ex.Message}");
+        }
+    }
 }

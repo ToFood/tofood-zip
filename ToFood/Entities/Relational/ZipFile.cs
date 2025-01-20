@@ -69,4 +69,11 @@ public class ZipFile
     /// Relacionamento com a entidade de usuário associada ao arquivo ZIP.
     /// </summary>
     public User? User { get; set; }
+
+    /// <summary>
+    /// Dados binários do arquivo ZIP.
+    /// </summary>
+    [Column("file_data")]
+    public byte[]? FileData { get; set; }
+
 }

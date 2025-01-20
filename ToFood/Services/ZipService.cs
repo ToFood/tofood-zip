@@ -7,6 +7,7 @@ using ToFood.Domain.Enums;
 using ToFood.Domain.Utils;
 using ToFood.Domain.Helpers;
 using Xabe.FFmpeg;
+using Microsoft.EntityFrameworkCore;
 
 namespace ToFood.Domain.Services;
 
@@ -186,19 +187,32 @@ public class ZipService
             zipFilePath = Path.Combine(_outputPath, $"{Path.GetFileNameWithoutExtension(file.FileName)}_{uniqueId}.zip");
             System.IO.Compression.ZipFile.CreateFromDirectory(outputFolder, zipFilePath);
 
-            var zipFile = new Domain.Entities.Relational.ZipFile
+            // Lê os bytes do ZIP
+            byte[] fileData;
+            using (var fileStream = new FileStream(zipFilePath, FileMode.Open, FileAccess.Read))
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    await fileStream.CopyToAsync(memoryStream);
+                    fileData = memoryStream.ToArray();
+                }
+            }
+
+            var zipFile = new Entities.Relational.ZipFile
             {
                 Id = Guid.NewGuid(),
                 FilePath = zipFilePath,
                 Status = ZipStatus.Completed,
                 VideoId = video.Id,
-                UserId = userId
+                UserId = userId,
+                FileData = fileData, // Salva os bytes no banco
+
             };
 
             _dbRelationalContext.ZipFiles.Add(zipFile);
             await _dbRelationalContext.SaveChangesAsync();
 
-            _logger.LogInformation("ZIP gerado com sucesso: {ZipFilePath}", zipFilePath);
+            _logger.LogInformation("ZIP gerado com sucesso: {Response}", SanitizerHelper.Sanitize(zipFile));
         }
         catch (Exception ex)
         {
@@ -213,4 +227,33 @@ public class ZipService
 
         return zipFilePath;
     }
+
+    /// <summary>
+    /// Busca um arquivo ZIP armazenado no banco ou sistema de arquivos.
+    /// </summary>
+    /// <param name="zipId">Identificador do ZIP.</param>
+    /// <returns>Bytes do arquivo ZIP e o nome do arquivo.</returns>
+    public async Task<(byte[]?, string)> GetZipFileAsync(Guid zipId)
+    {
+        var zipFile = await _dbRelationalContext.ZipFiles
+            .FirstOrDefaultAsync(z => z.Id == zipId);
+
+        if (zipFile == null)
+            return (null, string.Empty);
+
+        if (zipFile.FileData != null)
+        {
+            // Retorna os bytes do banco
+            return (zipFile.FileData, $"zip_{zipId}.zip");
+        }
+        else if (!string.IsNullOrEmpty(zipFile.FilePath) && System.IO.File.Exists(zipFile.FilePath))
+        {
+            // Lê os bytes do sistema de arquivos
+            var fileBytes = await System.IO.File.ReadAllBytesAsync(zipFile.FilePath);
+            return (fileBytes, Path.GetFileName(zipFile.FilePath));
+        }
+
+        return (null, string.Empty);
+    }
+
 }
