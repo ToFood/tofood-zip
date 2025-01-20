@@ -8,7 +8,7 @@ namespace ToFood.Domain.Helpers
     /// <summary>
     /// Provedor de log personalizado que envia logs para o MongoDB.
     /// </summary>
-    public class MongoDbLoggerProvider : ILoggerProvider
+    public class MongoLoggerProvider : ILoggerProvider
     {
         private readonly IMongoCollection<Log> _logCollection;
         private readonly IHttpContextAccessor _httpContextAccessor;
@@ -18,7 +18,7 @@ namespace ToFood.Domain.Helpers
         /// </summary>
         /// <param name="logCollection">A coleção do MongoDB onde os logs serão armazenados.</param>
         /// <param name="httpContextAccessor">Acessor para o contexto HTTP atual, usado para capturar informações do usuário ou requisição.</param>
-        public MongoDbLoggerProvider(IMongoCollection<Log> logCollection, IHttpContextAccessor httpContextAccessor)
+        public MongoLoggerProvider(IMongoCollection<Log> logCollection, IHttpContextAccessor httpContextAccessor)
         {
             _logCollection = logCollection;
             _httpContextAccessor = httpContextAccessor;
