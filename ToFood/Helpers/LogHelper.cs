@@ -71,11 +71,6 @@ namespace ToFood.Domain.Helpers
                 UserId = JWTHelper.GetAuthenticatedUserId(_httpContextAccessor).ToString() ?? null,
                 Request = GetRequestContext(),
                 Response = GetResponseContext(),
-                Metadata = new Dictionary<string, object>
-                {
-                    { "EventId", eventId.Id },
-                    { "EventName", eventId.Name ?? "" }
-                },
                 Exception = exception?.ToString()
             };
 

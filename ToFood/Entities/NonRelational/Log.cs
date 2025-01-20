@@ -53,11 +53,6 @@ public class Log
     public ResponseLog? Response { get; set; }
 
     /// <summary>
-    /// Informações adicionais ou metadados.
-    /// </summary>
-    public Dictionary<string, object> Metadata { get; set; } = new();
-
-    /// <summary>
     /// Exceções / Erros
     /// </summary>
     public string? Exception { get; set; }
@@ -123,21 +118,4 @@ public class ResponseLog
     /// Tempo total de processamento da requisição (em milissegundos).
     /// </summary>
     public long ProcessingTimeMs { get; set; }
-}
-
-
-/// <summary>
-/// Representa os detalhes do usuário que realizou a operação para fins de log.
-/// </summary>
-public class UserLog
-{
-    /// <summary>
-    /// ID único do usuário.
-    /// </summary>
-    public string? UserId { get; set; }
-
-    /// <summary>
-    /// Nome do usuário ou email.
-    /// </summary>
-    public string? UserName { get; set; }
 }
