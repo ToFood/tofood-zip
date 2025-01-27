@@ -143,7 +143,7 @@ public class MongoDbLogger : ILogger
         {
             Url = request.Path.ToString(),
             Method = request.Method,
-            Headers = request.Headers.ToDictionary(h => h.Key, h => string.Join(", ", h.Value)),
+            Headers = request.Headers.ToDictionary(h => h.Key, h => string.Join(", ", new {h.Value })),
             Body = requestBody
         };
     }
@@ -184,7 +184,7 @@ public class MongoDbLogger : ILogger
         return new ResponseLog
         {
             StatusCode = response.StatusCode,
-            Headers = response.Headers.ToDictionary(h => h.Key, h => string.Join(", ", h.Value)),
+            Headers = response.Headers.ToDictionary(h => h.Key, h => string.Join(", ", new {h.Value })),
             Body = null, // Corpo da resposta pode ser incluído se necessário.
             ProcessingTimeMs = 0 // Este campo pode ser calculado com middleware ou lógica personalizada.
         };
