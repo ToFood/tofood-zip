@@ -4,12 +4,12 @@ using ToFood.Domain.Entities.Relational;
 using ToFood.Domain.DTOs.Request;
 using ToFood.Domain.Services;
 
-namespace ToFood.Tests.UnitTests;
+namespace ToFood.Tests.MockTests.UnitTests;
 
 /// <summary>
 /// Testes unitários para o serviço de autenticação (UserService).
 /// </summary>
-public class UserServiceUnitTests : TestBase
+public class UserServiceUnitTests : TestMockBase
 {
     private readonly UserService _userService;
     private readonly ILogger<UserService> _logger;
@@ -29,6 +29,7 @@ public class UserServiceUnitTests : TestBase
     /// <summary>
     /// Testa o registro de um novo usuário com sucesso.
     /// </summary>
+    [Trait("Category", "Unit")]
     [Fact]
     public async Task Register_ValidUser_ReturnsSuccess()
     {
@@ -57,6 +58,7 @@ public class UserServiceUnitTests : TestBase
     /// <summary>
     /// Testa o registro de um usuário com email já existente.
     /// </summary>
+    [Trait("Category", "Unit")]
     [Fact]
     public async Task Register_DuplicateEmail_ReturnsError()
     {
@@ -89,6 +91,7 @@ public class UserServiceUnitTests : TestBase
     /// <summary>
     /// Testa o registro de um usuário com campos inválidos.
     /// </summary>
+    [Trait("Category", "Unit")]
     [Fact]
     public async Task Register_InvalidUserData_ReturnsError()
     {

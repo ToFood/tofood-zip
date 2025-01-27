@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Logging;
 using ToFood.Domain.Services;
+using ToFood.Domain.Services.Notifications;
 
 namespace ToFood.Domain.Extensions;
 
@@ -20,6 +21,8 @@ public static class DependencyInjectionExtensions
         services.AddScoped<VideoService>();
         services.AddScoped<YoutubeService>();
         services.AddScoped<LogHelper>();
+        services.AddScoped<NotificationService>();
+        services.AddScoped<EmailService>();
 
         // Adicione outros serviços do domínio aqui, se necessário.
 

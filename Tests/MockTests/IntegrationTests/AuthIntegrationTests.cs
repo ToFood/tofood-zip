@@ -1,14 +1,13 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using ToFood.Domain.Entities.Relational;
 using ToFood.Domain.Services;
 
-namespace ToFood.Tests.IntegrationTests;
+namespace ToFood.Tests.MockTests.IntegrationTests;
 
 /// <summary>
 /// Classe de testes de integração para o serviço de autenticação (AuthService).
 /// </summary>
-public class AuthIntegrationTests : TestBase
+public class AuthIntegrationTests : TestMockBase
 {
     private readonly AuthService _authService;
     private readonly ILogger<AuthService> _logger;

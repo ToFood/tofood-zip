@@ -15,11 +15,19 @@ public class EmailService
 {
     private readonly ILogger<EmailService> _logger;
     private readonly ToFoodRelationalContext _dbRelationalContext;
+    private ILogger<NotificationService> logger;
+    private ToFoodRelationalContext relationalContext;
 
     public EmailService(ILogger<EmailService> logger, ToFoodRelationalContext dbRelationalContext)
     {
         _logger = logger;
         _dbRelationalContext = dbRelationalContext;
+    }
+
+    public EmailService(ILogger<NotificationService> logger, ToFoodRelationalContext relationalContext)
+    {
+        this.logger = logger;
+        this.relationalContext = relationalContext;
     }
 
     /// <summary>

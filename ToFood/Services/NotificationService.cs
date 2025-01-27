@@ -12,10 +12,10 @@ public class NotificationService
 {
 
     private readonly ToFoodRelationalContext _dbRelationalContext;
-    private readonly ILogger<UserService> _logger;
+    private readonly ILogger<NotificationService> _logger;
     private readonly EmailService _emailService;
 
-    public NotificationService(ToFoodRelationalContext dbRelationalContext, ILogger<UserService> logger, EmailService emailService)
+    public NotificationService(ToFoodRelationalContext dbRelationalContext, ILogger<NotificationService> logger, EmailService emailService)
     {
         _dbRelationalContext = dbRelationalContext;
         _logger = logger;
@@ -27,7 +27,7 @@ public class NotificationService
     /// </summary>
     /// <param name="notificationId">ID da notificação.</param>
     /// <returns></returns>
-    internal async Task SendEmail(long notificationId)
+    public async Task SendEmail(long notificationId)
     {
         try
         {

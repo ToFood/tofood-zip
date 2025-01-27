@@ -7,7 +7,7 @@ namespace ToFood.Tests;
 /// <summary>
 /// Classe base para configurar o ambiente de testes.
 /// </summary>
-public abstract class TestBase : IDisposable
+public abstract class TestMockBase : IDisposable
 {
     /// <summary>
     /// Contexto do banco de dados relacional em memória para os testes.
@@ -22,7 +22,7 @@ public abstract class TestBase : IDisposable
     /// <summary>
     /// Construtor que inicializa o contexto do banco de dados e a configuração do ambiente.
     /// </summary>
-    protected TestBase()
+    protected TestMockBase()
     {
         // Configurar o DbContext InMemory
         var options = new DbContextOptionsBuilder<ToFoodRelationalContext>()

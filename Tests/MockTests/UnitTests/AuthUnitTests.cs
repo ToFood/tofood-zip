@@ -2,12 +2,12 @@
 using ToFood.Domain.Entities.Relational;
 using ToFood.Domain.Services;
 
-namespace ToFood.Tests.UnitTests;
+namespace ToFood.Tests.MockTests.UnitTests;
 
 /// <summary>
 /// Testes unitários para o serviço de autenticação (AuthService).
 /// </summary>
-public class AuthServiceUnitTests : TestBase
+public class AuthServiceUnitTests : TestMockBase
 {
     private readonly AuthService _authService;
     private readonly ILogger<AuthService> _logger;
@@ -27,6 +27,7 @@ public class AuthServiceUnitTests : TestBase
     /// <summary>
     /// Testa o login de um usuário com credenciais válidas.
     /// </summary>
+    [Trait("Category", "Unit")]
     [Fact]
     public async Task Login_ValidCredentials_ReturnsToken()
     {
@@ -50,6 +51,7 @@ public class AuthServiceUnitTests : TestBase
     /// <summary>
     /// Testa o login de um usuário com email inválido.
     /// </summary>
+    [Trait("Category", "Unit")]
     [Fact]
     public async Task Login_InvalidEmail_ReturnsError()
     {
@@ -72,6 +74,7 @@ public class AuthServiceUnitTests : TestBase
     /// <summary>
     /// Testa o login de um usuário com senha inválida.
     /// </summary>
+    [Trait("Category", "Unit")]
     [Fact]
     public async Task Login_InvalidPassword_ReturnsError()
     {
