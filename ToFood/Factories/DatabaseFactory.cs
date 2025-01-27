@@ -40,6 +40,9 @@ public static class DatabaseFactory
     /// <summary>
     /// Configura o banco relacional (PostgreSQL ou MySQL) com base no tipo especificado.
     /// </summary>
+    /// <param name="services"></param>
+    /// <param name="configuration"></param>
+    /// <exception cref="InvalidOperationException"></exception>
     private static void ConfigureRelationalDatabase(IServiceCollection services, IConfiguration configuration)
     {
         var relationalDatabaseProvider = configuration["RelationalDatabaseProvider"];
@@ -80,6 +83,9 @@ public static class DatabaseFactory
     /// <summary>
     /// Configura o banco não-relacional (MongoDB).
     /// </summary>
+    /// <param name="services"></param>
+    /// <param name="configuration"></param>
+    /// <exception cref="InvalidOperationException"></exception>
     private static void ConfigureNonRelationalDatabase(IServiceCollection services, IConfiguration configuration)
     {
         var nonRelationalDatabaseProvider = configuration["NonRelationalDatabaseProvider"];
@@ -121,7 +127,7 @@ public static class DatabaseFactory
     /// Realiza um teste de conexão com qualquer tipo de banco de dados.
     /// </summary>
     /// <param name="connectionString">A string de conexão do banco de dados.</param>
-    /// <param name="databaseName">O nome do banco de dados (se aplicável).</param>
+    /// <param name="dataBaseProvider">O nome do banco de dados (se aplicável).</param>
     private static void TestDatabaseConnection(string connectionString, string? dataBaseProvider = null)
     {
         try
@@ -132,7 +138,7 @@ public static class DatabaseFactory
                     using (var connection = new Npgsql.NpgsqlConnection(connectionString))
                     {
                         connection.Open(); // Tenta abrir a conexão
-                        Console.WriteLine($"🐘 {dataBaseProvider} - Conexão bem sucedida com [Banco Relacional]. connectionString: [{connectionString}]");
+                        Console.WriteLine($"🐘 {dataBaseProvider} - Conexão bem sucedida com [Banco Relacional]");
                     }
                     break;
 
@@ -144,7 +150,7 @@ public static class DatabaseFactory
 
                     // Testa se a conexão está funcional listando as coleções
                     database.ListCollectionNames();
-                    Console.WriteLine($"🍃 {dataBaseProvider} - Conexão bem sucedida com [Banco Não Relacional]. connectionString: [{connectionString}]");
+                    Console.WriteLine($"🍃 {dataBaseProvider} - Conexão bem sucedida com [Banco Não Relacional]");
                     break;
 
                 default:
@@ -153,7 +159,7 @@ public static class DatabaseFactory
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ Falha ao conectar ao banco '{dataBaseProvider}': {ex.Message}");
+            Console.WriteLine($"❌ Falha ao conectar ao banco '{dataBaseProvider}', verifique a connectionString no appsettings: {ex.Message}");
         }
     }
 

@@ -56,6 +56,11 @@ public class Video
     public ICollection<ZipFile>? ZipFiles { get; set; }
 
     /// <summary>
+    /// Relacionamento com as notificações associadas ao vídeo.
+    /// </summary>
+    public ICollection<FileNotification>? FileNotifications { get; set; }
+
+    /// <summary>
     /// Data de criação do registro do vídeo.
     /// </summary>
     [Required]

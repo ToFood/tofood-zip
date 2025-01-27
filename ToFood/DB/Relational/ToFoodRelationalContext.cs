@@ -29,6 +29,17 @@ public class ToFoodRelationalContext : DbContext
     public virtual DbSet<ZipFile> ZipFiles { get; set; }
 
     /// <summary>
+    /// Representa a tabela [file_notifications] no banco de dados.
+    /// </summary>
+    public virtual DbSet<FileNotification> FileNotifications { get; set; }
+
+    /// <summary>
+    /// Representa a tabela [file_notification_services] no banco de dados.
+    /// </summary>
+    public virtual DbSet<FileNotificationService> FileNotificationServices { get; set; }
+
+
+    /// <summary>
     /// Configuração do mapeamento das entidades.
     /// </summary>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -78,6 +89,40 @@ public class ToFoodRelationalContext : DbContext
             entity.Property(z => z.Status).IsRequired();
             entity.Property(z => z.CreatedAt).IsRequired();
             entity.Property(z => z.UpdatedAt).IsRequired();
+        });
+
+
+        // Configuração da entidade FileNotification
+        modelBuilder.Entity<FileNotification>(entity =>
+        {
+            entity.ToTable("file_notifications");
+            entity.HasKey(fn => new { fn.Id, fn.SentAt });
+
+            entity.Property(fn => fn.Type).IsRequired();
+            entity.Property(fn => fn.Status).IsRequired();
+            entity.Property(fn => fn.CreatedAt).IsRequired();
+            entity.Property(fn => fn.Attempt).IsRequired();
+            entity.Property(fn => fn.Deleted).IsRequired();
+
+            // Relacionamento com Video
+            entity.HasOne(fn => fn.Video)
+                  .WithMany(v => v.FileNotifications)
+                  .HasForeignKey(fn => fn.FileId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            // Relacionamento com FileNotificationService
+            entity.HasOne(fn => fn.FileNotificationService)
+                  .WithMany(fns => fns.FileNotifications)
+                  .HasForeignKey(fn => fn.FileNotificationServiceId)
+                  .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // Configuração da entidade FileNotificationService
+        modelBuilder.Entity<FileNotificationService>(entity =>
+        {
+            entity.ToTable("file_notification_services");
+            entity.HasKey(fns => fns.Id);
+            entity.Property(fns => fns.Name).IsRequired().HasMaxLength(255);
         });
     }
 }
