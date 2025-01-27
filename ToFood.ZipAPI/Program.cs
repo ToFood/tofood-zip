@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+Ôªøusing Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using System.Text;
@@ -11,7 +11,7 @@ using ToFood.Domain.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ConfiguraÁ„o do JWT
+// Configura√ß√£o do JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -29,13 +29,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// Registra o IHttpContextAccessor no contÍiner de dependÍncias
+// Registra o IHttpContextAccessor no cont√™iner de depend√™ncias
 builder.Services.AddHttpContextAccessor();
 
-// ConfiguraÁ„o do banco de dados usando o DatabaseFactory
+// Configura√ß√£o do banco de dados usando o DatabaseFactory
 DatabaseFactory.ConfigureDatabases(builder.Services, builder.Configuration);
 
-// Recupera a coleÁ„o de logs para o logger
+// Recupera a cole√ß√£o de logs para o logger
 var serviceProvider = builder.Services.BuildServiceProvider();
 var logCollection = serviceProvider.GetRequiredService<IMongoCollection<Log>>();
 var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
@@ -44,32 +44,32 @@ var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccesso
 builder.Logging.ClearProviders();
 builder.Logging.AddProvider(new MongoDBLoggerProvider(logCollection, httpContextAccessor));
 
-// DI (InjeÁ„o de DependÍncia)
-// Registra os serviÁos do domÌnio
+// DI (Inje√ß√£o de Depend√™ncia)
+// Registra os servi√ßos do dom√≠nio
 builder.Services.AddDomainServices();
 
-// Adiciona o serviÁo de CORS
+// Adiciona o servi√ßo de CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("ToFoodCORS", policy =>
     {
         policy.AllowAnyOrigin()  // Permite qualquer origem
-              .AllowAnyMethod()  // Permite qualquer mÈtodo HTTP (GET, POST, etc.)
-              .AllowAnyHeader(); // Permite qualquer cabeÁalho
+              .AllowAnyMethod()  // Permite qualquer m√©todo HTTP (GET, POST, etc.)
+              .AllowAnyHeader(); // Permite qualquer cabe√ßalho
     });
 });
 
-// ConfiguraÁ„o do Swagger para incluir suporte a JWT
+// Configura√ß√£o do Swagger para incluir suporte a JWT
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
     {
         Version = "v1",
         Title = "ToFood API",
-        Description = "API para autenticaÁ„o e serviÁos relacionados ao ToFood"
+        Description = "API para autentica√ß√£o e servi√ßos relacionados ao ToFood"
     });
 
-    // Configura o esquema de seguranÁa para autenticaÁ„o JWT
+    // Configura o esquema de seguran√ßa para autentica√ß√£o JWT
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -91,7 +91,7 @@ builder.Services.AddSwaggerGen(options =>
                     Id = "Bearer"
                 }
             },
-            Array.Empty<string>() // Sem escopos especÌficos
+            Array.Empty<string>() // Sem escopos espec√≠ficos
         }
     });
 });
@@ -102,23 +102,29 @@ builder.Services.AddEndpointsApiExplorer();
 
 var app = builder.Build();
 
-// ConfiguraÁ„o do pipeline HTTP
+// Configura√ß√£o do pipeline HTTP
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-// Ativa o CORS antes de outras configuraÁıes
+// Ativa o CORS antes de outras configura√ß√µes
 app.UseCors("ToFoodCORS");
 
 app.UseHttpsRedirection();
 
-// Adiciona autenticaÁ„o e autorizaÁ„o
+// Adiciona autentica√ß√£o e autoriza√ß√£o
 app.UseAuthentication();
 app.UseAuthorization();
 
 // Mapeia automaticamente as rotas das controllers
 app.MapControllers();
+
+// Log no console
+Console.WriteLine($"üßä .NET Version: [{Environment.Version}]"); // Exibe a vers√£o do .NET
+Console.WriteLine($"üõú Aplica√ß√£o rodando na porta: [{builder.Configuration["ASPNETCORE_URLS"]}]");
+Console.WriteLine($"‚ú≥Ô∏è Swagger rodando na porta: [{builder.Configuration["ASPNETCORE_URLS"]}/swagger]");
+Console.WriteLine($"");
 
 app.Run();

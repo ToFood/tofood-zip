@@ -3,7 +3,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using ToFood.Domain.DB.Relational;
-using ToFood.Domain.DB.NonRelational;
 using ToFood.Domain.DB.Relational.PostgreSQL;
 using System.Text;
 using ToFood.Domain.DB.NonRelational.MongoDB;
