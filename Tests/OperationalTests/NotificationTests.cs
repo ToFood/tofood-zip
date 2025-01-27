@@ -17,8 +17,11 @@ public class NotificationServiceOperationalTests : TestOperationalBase
     public NotificationServiceOperationalTests()
     {
         // Configurar o serviço de notificação
+        var loggerEmailService = new LoggerFactory().CreateLogger<EmailService>();
+        var emailService = new EmailService(loggerEmailService, RelationalContext);
+
         var logger = new LoggerFactory().CreateLogger<NotificationService>();
-        var emailService = new EmailService(logger, RelationalContext);
+
 
         _notificationService = new NotificationService(RelationalContext, logger, emailService);
     }
@@ -31,7 +34,7 @@ public class NotificationServiceOperationalTests : TestOperationalBase
     public async Task SendEmailTest()
     {
         // ID de notificação existente no banco real
-        long notificationId = 123456;
+        long notificationId = 1;
 
         // Executar o método de envio de notificação
         await _notificationService.SendEmail(notificationId);

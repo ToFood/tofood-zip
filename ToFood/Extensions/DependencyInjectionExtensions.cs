@@ -21,8 +21,8 @@ public static class DependencyInjectionExtensions
         services.AddScoped<VideoService>();
         services.AddScoped<YoutubeService>();
         services.AddScoped<LogHelper>();
-        services.AddScoped<NotificationService>();
         services.AddScoped<EmailService>();
+        services.AddScoped<NotificationService>();
 
         // Adicione outros serviços do domínio aqui, se necessário.
 
