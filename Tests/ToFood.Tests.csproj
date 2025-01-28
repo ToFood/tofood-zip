@@ -20,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Queues\ToFood.FileNotification\ToFood.FileNotification.csproj" />
     <ProjectReference Include="..\ToFood\ToFood.Domain.csproj" />
   </ItemGroup>
 
