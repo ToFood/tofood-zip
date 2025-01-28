@@ -22,8 +22,7 @@ public class NotificationServiceOperationalTests : TestOperationalBase
 
         var logger = new LoggerFactory().CreateLogger<NotificationService>();
 
-
-        _notificationService = new NotificationService(RelationalContext, logger, emailService);
+        _notificationService = new NotificationService(RelationalContext, logger, emailService, Configuration);
     }
 
     /// <summary>
@@ -53,5 +52,31 @@ public class NotificationServiceOperationalTests : TestOperationalBase
         await _notificationService.CreateNotification(new Guid("732eeeef-8a09-4a3f-90af-6dcb67a9fcad"));
 
         Console.WriteLine("Notificação criada com sucesso!");
+    }
+
+    /// <summary>
+    /// Cria e Envia uma notificação específica para a fila.
+    /// </summary>
+    /// <returns></returns>
+    [Fact]
+    public async Task CreateAndSendNotificationAsyncTest()
+    {
+        // Executar o método de envio de notificação
+        await _notificationService.CreateAndSendNotificationAsync(new Guid("732eeeef-8a09-4a3f-90af-6dcb67a9fcad"));
+
+        Console.WriteLine("Notificação criada e enviada para a fila com sucesso!");
+    }
+
+    /// <summary>
+    /// Envia uma notificação específica para a fila de forma manual.
+    /// </summary>
+    /// <returns></returns>
+    [Fact]
+    public async Task SendNotificationToSqsTest()
+    {
+        // Executar o método de envio de notificação
+        await _notificationService.SendNotificationToSqs(3);
+
+        Console.WriteLine("Notificação enviada para a fila com sucesso!");
     }
 }

@@ -1,6 +1,5 @@
 ﻿using Amazon.SQS;
 using Amazon.SQS.Model;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MimeKit;
@@ -9,7 +8,6 @@ using ToFood.Domain.DB.Relational;
 using ToFood.Domain.Entities.Relational;
 using ToFood.Domain.Enums;
 using ToFood.Domain.Extensions;
-using ToFood.Domain.Helpers;
 using ToFood.Domain.Interfaces;
 using ToFood.Domain.Services.Notifications;
 
@@ -21,12 +19,20 @@ public class NotificationService : INotificationService
     private readonly ToFoodRelationalContext _dbRelationalContext;
     private readonly ILogger<NotificationService> _logger;
     private readonly EmailService _emailService;
+    private readonly Microsoft.Extensions.Configuration.IConfiguration _configuration;
 
-    public NotificationService(ToFoodRelationalContext dbRelationalContext, ILogger<NotificationService> logger, EmailService emailService)
+
+    public NotificationService(
+        ToFoodRelationalContext dbRelationalContext,
+        ILogger<NotificationService> logger,
+        EmailService emailService,
+        Microsoft.Extensions.Configuration.IConfiguration configuration // Alterado para IConfiguration
+        )
     {
         _dbRelationalContext = dbRelationalContext;
         _logger = logger;
         _emailService = emailService;
+        _configuration = configuration;
     }
 
     /// <summary>
@@ -219,28 +225,32 @@ public class NotificationService : INotificationService
     /// Envia uma notificação para a fila SQS.
     /// </summary>
     /// <param name="notificationId">O ID da notificação.</param>
-    /// <returns></returns>
-    private async Task SendNotificationToSqs(long notificationId)
+    public async Task SendNotificationToSqs(long notificationId)
     {
         try
         {
-            // Configuração do cliente SQS (substitua pela configuração real)
-            var sqsClient = new AmazonSQSClient();
+            // Configuração do cliente SQS
+            using var sqsClient = new AmazonSQSClient();
+
+            // Construção da mensagem
+            var messageBody = JsonSerializer.Serialize(new { NotificationId = notificationId });
             var sendMessageRequest = new SendMessageRequest
             {
-                QueueUrl = "https://sqs.us-east-1.amazonaws.com/123456789012/MyQueue", // Substituir pela URL correta da fila SQS
-                MessageBody = JsonSerializer.Serialize(new { NotificationId = notificationId })
+                QueueUrl = _configuration["AWS:SQSQueueUrl"],
+                MessageBody = messageBody
             };
 
-            await sqsClient.SendMessageAsync(sendMessageRequest);
+            // Envio da mensagem
+            var response = await sqsClient.SendMessageAsync(sendMessageRequest);
 
-            _logger.LogInformation($"Notificação {notificationId} enviada para a fila SQS com sucesso.");
+            // Log do sucesso
+            _logger.LogInformation($"Notificação {notificationId} enviada para a fila SQS com sucesso. ID da Mensagem: {response.MessageId}");
         }
         catch (Exception ex)
         {
+            // Log de erro
             _logger.LogError(ex, $"Erro ao enviar a notificação {notificationId} para a fila SQS.");
             throw;
         }
     }
-
 }
