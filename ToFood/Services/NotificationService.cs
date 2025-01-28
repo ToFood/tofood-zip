@@ -43,7 +43,6 @@ public class NotificationService
                     n.Email,
                     n.Text,
                     n.Subject,
-                    n.TemplateId,
                     n.TemplateText,
                     File = new
                     {

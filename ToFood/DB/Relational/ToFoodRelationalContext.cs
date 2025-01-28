@@ -96,13 +96,9 @@ public class ToFoodRelationalContext : DbContext
         modelBuilder.Entity<FileNotification>(entity =>
         {
             entity.ToTable("file_notifications");
-            entity.HasKey(fn => new { fn.Id, fn.SentAt });
-
+            entity.HasKey(fn => new { fn.Id });
             entity.Property(fn => fn.Type).IsRequired();
             entity.Property(fn => fn.Status).IsRequired();
-            entity.Property(fn => fn.CreatedAt).IsRequired();
-            entity.Property(fn => fn.Attempt).IsRequired();
-            entity.Property(fn => fn.Deleted).IsRequired();
 
             // Relacionamento com Video
             entity.HasOne(fn => fn.Video)

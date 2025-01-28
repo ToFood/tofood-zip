@@ -15,7 +15,7 @@ public class FileNotification
     /// </summary>
     [Key]
     [Column("id")]
-    public long Id { get; set; }
+    public int Id { get; set; }
 
     /// <summary>
     /// Tipo da notificação.
@@ -69,12 +69,6 @@ public class FileNotification
     public bool Deleted { get; set; } = false;
 
     /// <summary>
-    /// Identificador do lote da notificação.
-    /// </summary>
-    [Column("batch_file_notification_id")]
-    public long? BatchFileNotificationId { get; set; }
-
-    /// <summary>
     /// Data de criação do registro.
     /// </summary>
     [Required]
@@ -123,30 +117,11 @@ public class FileNotification
     public FileNotificationService? FileNotificationService { get; set; }
 
     /// <summary>
-    /// Origem da notificação.
-    /// </summary>
-    [Required]
-    [Column("origin")]
-    public short Origin { get; set; } = 1;
-
-    /// <summary>
-    /// Identificador do template associado à notificação.
-    /// </summary>
-    [Column("template_id")]
-    public Guid? TemplateId { get; set; }
-
-    /// <summary>
     /// Número de tentativas de envio da notificação.
     /// </summary>
     [Required]
     [Column("attempt")]
-    public short Attempt { get; set; } = 1;
-
-    /// <summary>
-    /// Identificador do template de arquivo associado à notificação.
-    /// </summary>
-    [Column("file_template_id")]
-    public Guid? FileTemplateId { get; set; }
+    public int Attempt { get; set; } = 1;
 
     /// <summary>
     /// Texto do template associado à notificação.
