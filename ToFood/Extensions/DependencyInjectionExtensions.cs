@@ -3,6 +3,7 @@ using Microsoft.IdentityModel.Logging;
 using ToFood.Domain.Interfaces;
 using ToFood.Domain.Services;
 using ToFood.Domain.Services.Notifications;
+using ToFood.Domain.Services.TokenManager;
 
 namespace ToFood.Domain.Extensions;
 
@@ -26,6 +27,7 @@ public static class DependencyInjectionExtensions
         services.AddScoped<NotificationService>();
 
         services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<AWSTokenManager>();
 
 
         return services;

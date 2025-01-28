@@ -10,6 +10,7 @@ using ToFood.Domain.Enums;
 using ToFood.Domain.Extensions;
 using ToFood.Domain.Interfaces;
 using ToFood.Domain.Services.Notifications;
+using ToFood.Domain.Services.TokenManager;
 
 namespace ToFood.Domain.Services;
 
@@ -26,7 +27,7 @@ public class NotificationService : INotificationService
         ToFoodRelationalContext dbRelationalContext,
         ILogger<NotificationService> logger,
         EmailService emailService,
-        Microsoft.Extensions.Configuration.IConfiguration configuration // Alterado para IConfiguration
+        Microsoft.Extensions.Configuration.IConfiguration configuration
         )
     {
         _dbRelationalContext = dbRelationalContext;
@@ -231,6 +232,8 @@ public class NotificationService : INotificationService
         {
             // Configuração do cliente SQS
             using var sqsClient = new AmazonSQSClient();
+
+            var credentials = await AWSTokenManager.GetSecretAsync();
 
             // Construção da mensagem
             var messageBody = JsonSerializer.Serialize(new { NotificationId = notificationId });
