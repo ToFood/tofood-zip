@@ -4,25 +4,31 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using ToFood.Domain.Interfaces;
+using ToFood.Domain.Services.TokenManager;
 
 namespace ToFood.Queues.FileNotification;
-
 
 public class SqsNotificationWorker : BackgroundService
 {
     private readonly ILogger<SqsNotificationWorker> _logger;
+    private readonly INotificationService _notificationService;
+    private readonly Microsoft.Extensions.Configuration.IConfiguration _configuration;
     private readonly AmazonSQSClient _sqsClient;
     private readonly string _queueUrl;
-    private readonly INotificationService _notificationService;
 
     public SqsNotificationWorker(
         ILogger<SqsNotificationWorker> logger,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        Microsoft.Extensions.Configuration.IConfiguration configuration)
     {
         _logger = logger;
-        _sqsClient = new AmazonSQSClient();
-        _queueUrl = "https://sqs.us-east-1.amazonaws.com/123456789012/MyQueue"; // Substituir pela URL real.
         _notificationService = notificationService;
+        _configuration = configuration;
+
+        _queueUrl = _configuration["AWS:SQSQueueUrl"] ?? throw new ArgumentNullException("SQSQueueUrl não configurado.");
+
+        // Inicializa o cliente SQS uma vez para reutilização
+        _sqsClient = AWSTokenManager.GetAWSClient(_configuration);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -36,8 +42,8 @@ public class SqsNotificationWorker : BackgroundService
                 var receiveMessageRequest = new ReceiveMessageRequest
                 {
                     QueueUrl = _queueUrl,
-                    MaxNumberOfMessages = 5, // Número máximo de mensagens para consumir em uma chamada.
-                    WaitTimeSeconds = 10, // Long polling para reduzir custos.
+                    MaxNumberOfMessages = 5,
+                    WaitTimeSeconds = 10
                 };
 
                 var response = await _sqsClient.ReceiveMessageAsync(receiveMessageRequest, stoppingToken);
@@ -60,17 +66,17 @@ public class SqsNotificationWorker : BackgroundService
     {
         try
         {
-            // Deserializar o corpo da mensagem para obter o ID da notificação.
+            // Deserializar o corpo da mensagem para obter o ID da notificação
             var notification = JsonSerializer.Deserialize<NotificationMessage>(message.Body);
             if (notification?.NotificationId == null)
             {
                 throw new InvalidOperationException("Mensagem mal formatada: ID da notificação não encontrado.");
             }
 
-            // Chamar o método de domínio para processar a notificação.
+            // Processar a notificação
             await _notificationService.SendEmail(notification.NotificationId.Value);
 
-            // Apagar a mensagem da fila após o processamento bem-sucedido.
+            // Apagar a mensagem da fila após o processamento
             await _sqsClient.DeleteMessageAsync(new DeleteMessageRequest
             {
                 QueueUrl = _queueUrl,
@@ -82,6 +88,9 @@ public class SqsNotificationWorker : BackgroundService
         catch (Exception ex)
         {
             _logger.LogError(ex, $"Erro ao processar mensagem: {message.Body}");
+
+            // Opcional: Implementar lógica para mensagens mal formatadas
+            // Ex.: Mover para uma Dead Letter Queue (DLQ)
         }
     }
 

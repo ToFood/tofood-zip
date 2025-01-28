@@ -16,7 +16,10 @@ public class AWSTokenManager
         {
             // Criação do cliente SQS com as credenciais da configuração
             return new AmazonSQSClient(
-                new BasicAWSCredentials(configuration["AWS:AccessKey"], configuration["AWS:SecretKey"]),
+                new BasicAWSCredentials(
+                    configuration["AWS:AccessKey"],
+                    configuration["AWS:SecretKey"]
+                    ),
                 RegionEndpoint.GetBySystemName(configuration["AWS:Region"] ?? "us-east-1")
             );
         }

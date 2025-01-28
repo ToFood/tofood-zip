@@ -1,5 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Logging;
+using ToFood.Domain.DB.Relational;
 using ToFood.Domain.Interfaces;
 using ToFood.Domain.Services;
 using ToFood.Domain.Services.Notifications;
@@ -17,6 +20,8 @@ public static class DependencyInjectionExtensions
     /// </summary>
     public static IServiceCollection AddDomainServices(this IServiceCollection services)
     {
+       
+
         services.AddScoped<AuthService>();
         services.AddScoped<UserService>();
         services.AddScoped<ZipService>();
