@@ -7,6 +7,7 @@ using ToFood.Domain.Entities.NonRelational;
 using ToFood.Domain.Factories;
 using ToFood.Domain.Helpers;
 using ToFood.Domain.Extensions;
+using ToFood.Domain.Services.TokenManager;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -121,10 +122,11 @@ app.UseAuthorization();
 // Mapeia automaticamente as rotas das controllers
 app.MapControllers();
 
-// Log no console
+// Informações úteis de Inicialização
 Console.WriteLine($"🧊 .NET Version: [{Environment.Version}]"); // Exibe a versão do .NET
 Console.WriteLine($"🛜 Aplicação rodando na porta: [{builder.Configuration["ASPNETCORE_URLS"]}]");
 Console.WriteLine($"✳️ Swagger rodando na porta: [{builder.Configuration["ASPNETCORE_URLS"]}/swagger]");
+AWSTokenManager.TestAWSConnection(builder.Configuration);
 Console.WriteLine($"");
 
 app.Run();
