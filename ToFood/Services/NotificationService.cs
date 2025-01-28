@@ -10,11 +10,12 @@ using ToFood.Domain.Entities.Relational;
 using ToFood.Domain.Enums;
 using ToFood.Domain.Extensions;
 using ToFood.Domain.Helpers;
+using ToFood.Domain.Interfaces;
 using ToFood.Domain.Services.Notifications;
 
 namespace ToFood.Domain.Services;
 
-public class NotificationService
+public class NotificationService : INotificationService
 {
 
     private readonly ToFoodRelationalContext _dbRelationalContext;
@@ -33,7 +34,7 @@ public class NotificationService
     /// </summary>
     /// <param name="notificationId">ID da notificação.</param>
     /// <returns></returns>
-    internal async Task SendEmail(long notificationId)
+    public async Task SendEmail(long notificationId)
     {
         try
         {
@@ -221,28 +222,6 @@ public class NotificationService
     /// <returns></returns>
     private async Task SendNotificationToSqs(long notificationId)
     {
-        // Busca a notificação pelo ID
-        var notification = await _dbRelationalContext.FileNotifications
-            .AsNoTracking()
-            .Where(n => n.Id == notificationId)
-            .FirstOrDefaultAsync();
-
-        if (notification == null)
-        {
-            throw new Exception($"A notificação {notificationId} não foi encontrada.");
-        }
-
-        var notificationMessage = new
-        {
-            NotificationId = notification.Id,
-            Email = notification.Email,
-            Subject = notification.Subject,
-            Text = notification.Text,
-            TemplateText = notification.TemplateText,
-            FileId = notification.FileId,
-            CreatedAt = notification.CreatedAt
-        };
-
         try
         {
             // Configuração do cliente SQS (substitua pela configuração real)
@@ -250,7 +229,7 @@ public class NotificationService
             var sendMessageRequest = new SendMessageRequest
             {
                 QueueUrl = "https://sqs.us-east-1.amazonaws.com/123456789012/MyQueue", // Substituir pela URL correta da fila SQS
-                MessageBody = JsonSerializer.Serialize(notificationMessage)
+                MessageBody = JsonSerializer.Serialize(new { NotificationId = notificationId })
             };
 
             await sqsClient.SendMessageAsync(sendMessageRequest);

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Logging;
+using ToFood.Domain.Interfaces;
 using ToFood.Domain.Services;
 using ToFood.Domain.Services.Notifications;
 
@@ -23,6 +24,9 @@ public static class DependencyInjectionExtensions
         services.AddScoped<LogHelper>();
         services.AddScoped<EmailService>();
         services.AddScoped<NotificationService>();
+
+        services.AddScoped<INotificationService, NotificationService>();
+
 
         return services;
     }

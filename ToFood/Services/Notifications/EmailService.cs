@@ -35,7 +35,7 @@ public class EmailService
     /// <param name="attachments">Anexos do e-mail (opcional).</param>
     /// <param name="emailsBcc">Lista de destinatários em cópia oculta (opcional).</param>
     /// <returns>Resultado da operação de envio.</returns>
-    public async Task<EmailResult> SendEmail(
+    internal async Task<EmailResult> SendEmail(
         Guid notificationServiceId,
         MailboxAddress[] emails,
         string subject,
@@ -183,7 +183,7 @@ public class EmailService
 /// <summary>
 /// Representa o resultado do envio de e-mail.
 /// </summary>
-public class EmailResult
+internal class EmailResult
 {
     public bool Success { get; set; }
     public string? ErrorMessage { get; set; }

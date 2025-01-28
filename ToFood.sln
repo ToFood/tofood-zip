@@ -15,6 +15,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToFood.ZipGenerator", "Work
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Workers", "Workers", "{6F83A05B-10D5-4603-A3FF-577A0D6FCE58}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Queues", "Queues", "{14921916-26C7-4D78-843A-6A66E916BC88}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToFood.FileNotification", "Queues\ToFood.FileNotification\ToFood.FileNotification.csproj", "{FE711C56-F190-4298-853E-EB0D6713E7D9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +45,10 @@ Global
 		{16015D83-B11D-49F7-B947-D5A6721BACAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{16015D83-B11D-49F7-B947-D5A6721BACAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{16015D83-B11D-49F7-B947-D5A6721BACAA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE711C56-F190-4298-853E-EB0D6713E7D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE711C56-F190-4298-853E-EB0D6713E7D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE711C56-F190-4298-853E-EB0D6713E7D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE711C56-F190-4298-853E-EB0D6713E7D9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -48,6 +56,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{3557D68D-D911-4858-AB90-ACB75529D8C4} = {6F83A05B-10D5-4603-A3FF-577A0D6FCE58}
 		{16015D83-B11D-49F7-B947-D5A6721BACAA} = {6F83A05B-10D5-4603-A3FF-577A0D6FCE58}
+		{FE711C56-F190-4298-853E-EB0D6713E7D9} = {14921916-26C7-4D78-843A-6A66E916BC88}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {10A0E911-6995-4D71-94BF-5C875CCF926C}

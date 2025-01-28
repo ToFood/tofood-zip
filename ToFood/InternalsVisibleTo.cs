@@ -2,3 +2,5 @@
 
 [assembly: InternalsVisibleTo("ToFood.Tests")]
 [assembly: InternalsVisibleTo("ToFood.Workers")]
+[assembly: InternalsVisibleTo("ToFood.Queues")]
+
