@@ -1,8 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Logging;
-using ToFood.Domain.DB.Relational;
 using ToFood.Domain.Interfaces;
 using ToFood.Domain.Services;
 using ToFood.Domain.Services.Notifications;

@@ -1,9 +1,13 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using MongoDB.Driver;
+using ToFood.Domain.Entities.NonRelational;
 using ToFood.Domain.Extensions;
 using ToFood.Domain.Factories;
+using ToFood.Domain.Helpers;
 using ToFood.Queues.FileNotification;
 
 class Program
@@ -20,21 +24,37 @@ class Program
             })
             .ConfigureServices((context, services) =>
             {
-                // Configuração do banco de dados usando o DatabaseFactory
-                DatabaseFactory.ConfigureDatabases(services, context.Configuration);
+                var configuration = context.Configuration;
 
-                // Configuração de serviços do domínio
-                services.AddDomainServices();
+                // Registra o IHttpContextAccessor
+                services.AddHttpContextAccessor();
+
+                // Configuração do banco de dados usando o DatabaseFactory
+                DatabaseFactory.ConfigureDatabases(services, configuration);
 
                 // Registra o Worker como um HostedService
                 services.AddHostedService<SqsNotificationWorker>();
 
-                // Configuração do logging
-                services.AddLogging(logging =>
+                // Configuração de logging
+                services.AddLogging(loggingBuilder =>
                 {
-                    logging.ClearProviders();
-                    logging.AddConsole();
+
+
+                    // Recupera o ServiceProvider para resolver dependências
+                    var serviceProvider = services.BuildServiceProvider();
+                    var logCollection = serviceProvider.GetRequiredService<IMongoCollection<Log>>();
+                    var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
+
+                    loggingBuilder.ClearProviders();
+                    loggingBuilder.AddConsole();
+                    // Configura o MongoDBLoggerProvider
+                    loggingBuilder.AddProvider(new MongoDBLoggerProvider(logCollection, httpContextAccessor));
+
+                    // DI (Injeção de Dependência)
+                    // Registra os serviços do domínio
+                    services.AddDomainServices();
                 });
+
             })
             .Build();
 
