@@ -75,7 +75,7 @@ public class NotificationServiceOperationalTests : TestOperationalBase
     public async Task SendNotificationToSqsTest()
     {
         // Executar o método de envio de notificação
-        await _notificationService.SendNotificationToSqs(3);
+        await _notificationService.SendNotificationToSqs(2);
 
         Console.WriteLine("Notificação enviada para a fila com sucesso!");
     }

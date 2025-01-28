@@ -1,4 +1,6 @@
-﻿using Amazon.SQS;
+﻿using Amazon;
+using Amazon.Runtime;
+using Amazon.SQS;
 using Amazon.SQS.Model;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -230,10 +232,8 @@ public class NotificationService : INotificationService
     {
         try
         {
-            // Configuração do cliente SQS
-            using var sqsClient = new AmazonSQSClient();
-
-            var credentials = await AWSTokenManager.GetSecretAsync();
+            // Recuperar as credenciais do Secrets Manager
+            var sqsClient = AWSTokenManager.GetAWSClient(_configuration);
 
             // Construção da mensagem
             var messageBody = JsonSerializer.Serialize(new { NotificationId = notificationId });
@@ -256,4 +256,5 @@ public class NotificationService : INotificationService
             throw;
         }
     }
+
 }
