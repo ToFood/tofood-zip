@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ToFood.Domain.DB.Relational;
 using ToFood.Domain.DTOs.Response;
+using ToFood.Domain.Entities.Relational;
+using ToFood.Domain.Enums;
 using ToFood.Domain.Helpers;
 
 namespace ToFood.Domain.Services;
@@ -13,12 +15,19 @@ public class VideoService
     private readonly ToFoodRelationalContext _dbRelationalContext;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogger<VideoService> _logger;
+    private readonly NotificationService _notificationService;
 
-    public VideoService(ToFoodRelationalContext dbContext, IHttpContextAccessor httpContextAccessor, ILogger<VideoService> logger)
+    public VideoService(
+        ToFoodRelationalContext dbContext,
+        IHttpContextAccessor httpContextAccessor,
+        ILogger<VideoService> logger,
+        NotificationService notificationService
+        )
     {
         _dbRelationalContext = dbContext;
         _httpContextAccessor = httpContextAccessor;
         _logger = logger;
+        _notificationService = notificationService;
     }
 
 
@@ -89,5 +98,77 @@ public class VideoService
             })
             .ToListAsync();
     }
+
+    /// <summary>
+    /// Processa um único vídeo: salva no banco e gera imagens.
+    /// </summary>
+    public async Task<Video> ProcessVideo(IFormFile file, string outputPath)
+    {
+        _logger.LogInformation("Iniciando processamento do vídeo {FileName}.", file.FileName);
+
+        // Valida o arquivo
+        if (file == null || file.Length == 0)
+        {
+            _logger.LogWarning("Arquivo inválido: {FileName}.", file?.FileName ?? "Desconhecido");
+            throw new ArgumentException("Arquivo inválido.");
+        }
+
+        if (!file.FileName.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase) &&
+            !file.FileName.EndsWith(".avi", StringComparison.OrdinalIgnoreCase) &&
+            !file.FileName.EndsWith(".mov", StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogWarning("Formato de vídeo inválido: {FileName}.", file.FileName);
+            throw new ArgumentException("Formato de vídeo inválido. Aceitamos apenas .mp4, .avi ou .mov.");
+        }
+
+        // Recupera ID do usuário do JWT de autenticação
+        var userId = JWTHelper.GetAuthenticatedUserId(_httpContextAccessor);
+        _logger.LogInformation("Usuário autenticado: {UserId}.", userId);
+
+        byte[] videoData;
+        using (var memoryStream = new MemoryStream())
+        {
+            await file.CopyToAsync(memoryStream);
+            videoData = memoryStream.ToArray();
+        }
+
+        // Cria o registro do vídeo no banco
+        var video = new Video
+        {
+            Id = Guid.NewGuid(),
+            FileName = file.FileName,
+            FilePath = "",
+            FileData = videoData,
+            Status = VideoStatus.Completed,
+            UserId = userId
+        };
+
+        _dbRelationalContext.Videos.Add(video);
+        await _dbRelationalContext.SaveChangesAsync();
+
+        var videoPath = Path.Combine(outputPath, $"{video.Id}_{file.FileName}");
+        video.FilePath = videoPath;
+
+        try
+        {
+            using (var stream = new FileStream(videoPath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+            await _dbRelationalContext.SaveChangesAsync();
+            _logger.LogInformation("Vídeo {FileName} salvo em {VideoPath}.", file.FileName, videoPath);
+        }
+        catch (Exception ex)
+        {
+            video.Status = VideoStatus.Failed;
+            await _dbRelationalContext.SaveChangesAsync();
+            await _notificationService.CreateAndSendNotificationAsync(fileId: video.Id);
+            _logger.LogError(ex, "Erro ao salvar o vídeo {FileName}.", file.FileName);
+            throw;
+        }
+
+        return video;
+    }
+
 
 }

@@ -120,6 +120,7 @@ public class NotificationService : INotificationService
             // Atualiza o status da notificação com base no resultado do envio
             if (emailResult.Success)
             {
+                _logger.LogInformation($"Notificação de ID [{notificationId}] enviada com sucesso para o email [{fileNotification.Email}].");
                 await _dbRelationalContext.FileNotifications
                 .UpdateAsync(notificationId, n => new()
                 {

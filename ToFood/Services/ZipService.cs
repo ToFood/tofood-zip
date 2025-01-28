@@ -20,13 +20,21 @@ public class ZipService
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogger<ZipService> _logger; // Logger para o serviço
     private readonly NotificationService _notificationService;
+    private readonly VideoService _videoService;
 
-    public ZipService(ToFoodRelationalContext dbContext, IHttpContextAccessor httpContextAccessor, ILogger<ZipService> logger, NotificationService notificationService)
+    public ZipService(
+        ToFoodRelationalContext dbContext,
+        IHttpContextAccessor httpContextAccessor,
+        ILogger<ZipService> logger,
+        NotificationService notificationService,
+        VideoService videoService)
     {
         _dbRelationalContext = dbContext;
         _httpContextAccessor = httpContextAccessor;
         _logger = logger;
         _notificationService = notificationService;
+        _videoService = videoService;
+
 
         // Garante que os diretórios de upload e saída existam
         Directory.CreateDirectory(_uploadPath);
@@ -55,7 +63,12 @@ public class ZipService
 
         foreach (var file in files)
         {
-            tasks.Add(ProcessarVideoAsync(file));
+            // Adiciona as tarefas para processar cada vídeo individualmente
+            tasks.Add(Task.Run(async () =>
+            {
+                var video = await _videoService.ProcessVideo(file, _outputPath);
+                return await GenerateZipFromVideo(video);
+            }));
         }
 
         try
@@ -109,149 +122,11 @@ public class ZipService
     }
 
     /// <summary>
-    /// Processa um único vídeo: converte em imagens, gera um arquivo ZIP e salva os dados no banco.
-    /// </summary>
-    private async Task<string> ProcessarVideoAsync(IFormFile file)
-    {
-        _logger.LogInformation("Iniciando processamento do vídeo {FileName}.", file.FileName);
-
-        // Valida o arquivo
-        if (file == null || file.Length == 0)
-        {
-            _logger.LogWarning("Arquivo inválido: {FileName}.", file?.FileName ?? "Desconhecido");
-            throw new ArgumentException("Arquivo inválido.");
-        }
-
-        if (!file.FileName.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase) &&
-            !file.FileName.EndsWith(".avi", StringComparison.OrdinalIgnoreCase) &&
-            !file.FileName.EndsWith(".mov", StringComparison.OrdinalIgnoreCase))
-        {
-            _logger.LogWarning("Formato de vídeo inválido: {FileName}.", file.FileName);
-            throw new ArgumentException("Formato de vídeo inválido. Aceitamos apenas .mp4, .avi ou .mov.");
-        }
-
-        // Recupera ID do usuário do JWT de autenticação
-        var userId = JWTHelper.GetAuthenticatedUserId(_httpContextAccessor);
-        _logger.LogInformation("Usuário autenticado: {UserId}.", userId);
-
-        byte[] VideoData;
-        using (var memoryStream = new MemoryStream())
-        {
-            await file.CopyToAsync(memoryStream);
-            VideoData = memoryStream.ToArray();
-        }
-
-        // Cria o registro do vídeo no banco
-        var video = new Video
-        {
-            Id = Guid.NewGuid(),
-            FileName = file.FileName,
-            FilePath = "", // Opcional se o caminho não for necessário
-            FileData = VideoData, // Armazena os dados binários
-            Status = VideoStatus.Completed,
-            UserId = userId
-        };
-
-        _dbRelationalContext.Videos.Add(video);
-        await _dbRelationalContext.SaveChangesAsync();
-
-        var videoPath = Path.Combine(_uploadPath, $"{video.Id}_{file.FileName}");
-        video.FilePath = videoPath;
-
-        try
-        {
-            using (var stream = new FileStream(videoPath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
-
-            await _dbRelationalContext.SaveChangesAsync();
-
-            _logger.LogInformation("Vídeo {FileName} salvo em {VideoPath}.", file.FileName, videoPath);
-        }
-        catch (Exception ex)
-        {
-            video.Status = VideoStatus.Failed;
-
-            await _dbRelationalContext.SaveChangesAsync();
-
-            // Criamos uma notificação de erro e enviamos para o cliente
-            await _notificationService.CreateAndSendNotificationAsync(fileId: video.Id);
-
-            _logger.LogError(ex, "Erro ao salvar o vídeo {FileName}.", file.FileName);
-            throw;
-        }
-
-        // Extração de imagens e criação do ZIP
-        var outputFolder = Path.Combine(_outputPath, $"{Path.GetFileNameWithoutExtension(file.FileName)}_{video.Id}");
-        Directory.CreateDirectory(outputFolder);
-
-        var zipFilePath = "";
-        try
-        {
-            var mediaInfo = await FFmpeg.GetMediaInfo(videoPath);
-            var videoDuration = mediaInfo.VideoStreams.First().Duration.TotalSeconds;
-
-            var snapshotTasks = new List<Task>();
-            for (int i = 0; i < videoDuration; i++)
-            {
-                var outputImagePath = Path.Combine(outputFolder, $"frame_{i:D3}.png");
-                var conversion = await FFmpeg.Conversions.FromSnippet.Snapshot(videoPath, outputImagePath, TimeSpan.FromSeconds(i));
-                snapshotTasks.Add(conversion.Start());
-            }
-
-            await Task.WhenAll(snapshotTasks);
-
-            zipFilePath = Path.Combine(_outputPath, $"{Path.GetFileNameWithoutExtension(file.FileName)}_{video.Id}.zip");
-            System.IO.Compression.ZipFile.CreateFromDirectory(outputFolder, zipFilePath);
-
-            // Lê os bytes do ZIP
-            byte[] zipData;
-            using (var fileStream = new FileStream(zipFilePath, FileMode.Open, FileAccess.Read))
-            {
-                using (var memoryStream = new MemoryStream())
-                {
-                    await fileStream.CopyToAsync(memoryStream);
-                    zipData = memoryStream.ToArray();
-                }
-            }
-
-            var zipFile = new Entities.Relational.ZipFile
-            {
-                Id = Guid.NewGuid(),
-                FilePath = zipFilePath,
-                Status = ZipStatus.Completed,
-                VideoId = video.Id,
-                UserId = userId,
-                FileData = zipData, // Salva os bytes no banco
-
-            };
-
-            _dbRelationalContext.ZipFiles.Add(zipFile);
-            await _dbRelationalContext.SaveChangesAsync();
-
-            _logger.LogInformation("ZIP gerado com sucesso: {Response}", SanitizerHelper.Sanitize(zipFile));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Erro ao processar o vídeo {FileName}.", file.FileName);
-            throw;
-        }
-        finally
-        {
-            Directory.Delete(outputFolder, true);
-            File.Delete(videoPath);
-        }
-
-        return zipFilePath;
-    }
-
-    /// <summary>
     /// Busca um arquivo ZIP armazenado no banco.
     /// </summary>
     /// <param name="zipId">Identificador do ZIP.</param>
     /// <returns>Bytes do arquivo ZIP e o nome do arquivo.</returns>
-    public async Task<(byte[]?, string)> GetZipFileAsync(Guid zipId)
+    public async Task<(byte[]?, string)> GetZipFile(Guid zipId)
     {
         var zipFile = await _dbRelationalContext.ZipFiles
         .AsNoTracking()
@@ -285,7 +160,6 @@ public class ZipService
     /// <summary>
     /// Lista os Zips vinculados a um usuário.
     /// </summary>
-    /// <param name="userId">ID do usuário.</param>
     /// <returns>Lista de Zips vinculados ao usuário.</returns>
     public async Task<List<ZipResponse>> ListZipsByUser()
     {
@@ -308,6 +182,73 @@ public class ZipService
                 Status = z.Status.ToEnumDescription(),
             })
             .ToListAsync();
+    }
+
+    /// <summary>
+    /// Gera imagens do vídeo e cria um arquivo ZIP.
+    /// </summary>
+    private async Task<string> GenerateZipFromVideo(Video video)
+    {
+        var outputFolder = Path.Combine(_outputPath, $"{Path.GetFileNameWithoutExtension(video.FileName)}_{video.Id}");
+        Directory.CreateDirectory(outputFolder);
+
+        var zipFilePath = "";
+        try
+        {
+            var mediaInfo = await FFmpeg.GetMediaInfo(video.FilePath);
+            var videoDuration = mediaInfo.VideoStreams.First().Duration.TotalSeconds;
+
+            var snapshotTasks = new List<Task>();
+            for (int i = 0; i < videoDuration; i++)
+            {
+                var outputImagePath = Path.Combine(outputFolder, $"frame_{i:D3}.png");
+                var conversion = await FFmpeg.Conversions.FromSnippet.Snapshot(video.FilePath, outputImagePath, TimeSpan.FromSeconds(i));
+                snapshotTasks.Add(conversion.Start());
+            }
+
+            await Task.WhenAll(snapshotTasks);
+
+            zipFilePath = Path.Combine(_outputPath, $"{Path.GetFileNameWithoutExtension(video.FileName)}_{video.Id}.zip");
+            System.IO.Compression.ZipFile.CreateFromDirectory(outputFolder, zipFilePath);
+
+            // Lê os bytes do ZIP
+            byte[] zipData;
+            using (var fileStream = new FileStream(zipFilePath, FileMode.Open, FileAccess.Read))
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    await fileStream.CopyToAsync(memoryStream);
+                    zipData = memoryStream.ToArray();
+                }
+            }
+
+            var zipFile = new Entities.Relational.ZipFile
+            {
+                Id = Guid.NewGuid(),
+                FilePath = zipFilePath,
+                Status = ZipStatus.Completed,
+                VideoId = video.Id,
+                UserId = video.UserId,
+                FileData = zipData,
+            };
+
+            _dbRelationalContext.ZipFiles.Add(zipFile);
+            await _dbRelationalContext.SaveChangesAsync();
+
+            _logger.LogInformation("ZIP gerado com sucesso: {Response}", SanitizerHelper.Sanitize(zipFile));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao processar o vídeo {FileName}.", video.FileName);
+            throw;
+        }
+        finally
+        {
+            Directory.Delete(outputFolder, true);
+            File.Delete(video.FilePath);
+        }
+
+        return zipFilePath;
     }
 
 }

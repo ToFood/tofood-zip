@@ -124,9 +124,8 @@ app.MapControllers();
 
 // Informações úteis de Inicialização
 Console.WriteLine($"🧊 .NET Version: [{Environment.Version}]"); // Exibe a versão do .NET
+AWSTokenManager.TestAWSConnection(builder.Configuration);
 Console.WriteLine($"🛜 Aplicação rodando na porta: [{builder.Configuration["ASPNETCORE_URLS"]}]");
 Console.WriteLine($"✳️ Swagger rodando na porta: [{builder.Configuration["ASPNETCORE_URLS"]}/swagger]");
-AWSTokenManager.TestAWSConnection(builder.Configuration);
-Console.WriteLine($"");
 
 app.Run();

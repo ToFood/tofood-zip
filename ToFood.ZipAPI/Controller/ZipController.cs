@@ -61,7 +61,7 @@ public class ZipController : ControllerBase
         try
         {
             // Busca o ZIP no banco ou sistema de arquivos
-            var (zipBytes, fileName) = await _zipService.GetZipFileAsync(zipId);
+            var (zipBytes, fileName) = await _zipService.GetZipFile(zipId);
 
             if (zipBytes == null)
                 return NotFound("Arquivo ZIP não encontrado.");
