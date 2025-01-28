@@ -14,8 +14,9 @@ public class FileNotification
     /// Identificador único da notificação.
     /// </summary>
     [Key]
-    [Column("id")]
-    public int Id { get; set; }
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)] // Gera o valor automaticamente
+    [Column("id")] // Nome da coluna no banco
+    public long Id { get; set; }
 
     /// <summary>
     /// Tipo da notificação.

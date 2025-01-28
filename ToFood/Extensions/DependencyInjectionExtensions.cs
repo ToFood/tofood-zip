@@ -24,8 +24,6 @@ public static class DependencyInjectionExtensions
         services.AddScoped<EmailService>();
         services.AddScoped<NotificationService>();
 
-        // Adicione outros serviços do domínio aqui, se necessário.
-
         return services;
     }
 }

@@ -124,4 +124,22 @@ public class FileNotificationService
     /// Relacionamento com as notificações associadas ao serviço.
     /// </summary>
     public ICollection<FileNotification>? FileNotifications { get; set; }
+
+    /// <summary>
+    /// Título Default da Notificação
+    /// </summary>
+    [Column("title")]
+    public string? Title { get; set; }
+
+    /// <summary>
+    /// Corpo Default da Notificação
+    /// </summary>
+    [Column("template_text")]
+    public string? TemplateText { get; set; }
+
+    /// <summary>
+    /// Text Default da Notificação
+    /// </summary>
+    [Column("text")]
+    public string? Text { get; set; } 
 }

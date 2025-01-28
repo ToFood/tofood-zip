@@ -19,12 +19,14 @@ public class ZipService
     private readonly ToFoodRelationalContext _dbRelationalContext; // Contexto do banco de dados
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogger<ZipService> _logger; // Logger para o serviço
+    private readonly NotificationService _notificationService;
 
-    public ZipService(ToFoodRelationalContext dbContext, IHttpContextAccessor httpContextAccessor, ILogger<ZipService> logger)
+    public ZipService(ToFoodRelationalContext dbContext, IHttpContextAccessor httpContextAccessor, ILogger<ZipService> logger, NotificationService notificationService)
     {
         _dbRelationalContext = dbContext;
         _httpContextAccessor = httpContextAccessor;
         _logger = logger;
+        _notificationService = notificationService;
 
         // Garante que os diretórios de upload e saída existam
         Directory.CreateDirectory(_uploadPath);
@@ -153,8 +155,8 @@ public class ZipService
         _dbRelationalContext.Videos.Add(video);
         await _dbRelationalContext.SaveChangesAsync();
 
-        var uniqueId = Guid.NewGuid().ToString();
-        var videoPath = Path.Combine(_uploadPath, $"{uniqueId}_{file.FileName}");
+        var videoPath = Path.Combine(_uploadPath, $"{video.Id}_{file.FileName}");
+        video.FilePath = videoPath;
 
         try
         {
@@ -163,19 +165,25 @@ public class ZipService
                 await file.CopyToAsync(stream);
             }
 
-            video.FilePath = videoPath;
             await _dbRelationalContext.SaveChangesAsync();
 
             _logger.LogInformation("Vídeo {FileName} salvo em {VideoPath}.", file.FileName, videoPath);
         }
         catch (Exception ex)
         {
+            video.Status = VideoStatus.Failed;
+
+            await _dbRelationalContext.SaveChangesAsync();
+
+            // Criamos uma notificação de erro e enviamos para o cliente
+            await _notificationService.CreateAndSendNotificationAsync(fileId: video.Id);
+
             _logger.LogError(ex, "Erro ao salvar o vídeo {FileName}.", file.FileName);
             throw;
         }
 
         // Extração de imagens e criação do ZIP
-        var outputFolder = Path.Combine(_outputPath, $"{Path.GetFileNameWithoutExtension(file.FileName)}_{uniqueId}");
+        var outputFolder = Path.Combine(_outputPath, $"{Path.GetFileNameWithoutExtension(file.FileName)}_{video.Id}");
         Directory.CreateDirectory(outputFolder);
 
         var zipFilePath = "";
@@ -194,7 +202,7 @@ public class ZipService
 
             await Task.WhenAll(snapshotTasks);
 
-            zipFilePath = Path.Combine(_outputPath, $"{Path.GetFileNameWithoutExtension(file.FileName)}_{uniqueId}.zip");
+            zipFilePath = Path.Combine(_outputPath, $"{Path.GetFileNameWithoutExtension(file.FileName)}_{video.Id}.zip");
             System.IO.Compression.ZipFile.CreateFromDirectory(outputFolder, zipFilePath);
 
             // Lê os bytes do ZIP

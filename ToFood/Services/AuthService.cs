@@ -73,7 +73,8 @@ public class AuthService
         {
             Subject = new ClaimsIdentity(new[] {
                 new Claim(ClaimTypes.Name, user?.Email ?? ""),
-                new Claim("userId", user?.Id.ToString() ?? ""), // Claim customizada para testes
+                new Claim("userId", user?.Id.ToString() ?? ""),
+                new Claim("userEmail", user?.Email ?? ""),
             }),
             Expires = DateTime.UtcNow.AddHours(1),
             Issuer = _configuration["Jwt:Issuer"], // Adiciona emissor

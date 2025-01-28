@@ -41,4 +41,17 @@ public class NotificationServiceOperationalTests : TestOperationalBase
 
         Console.WriteLine("Notificação enviada com sucesso!");
     }
+
+    /// <summary>
+    /// Enviar uma notificação específica de forma manual (operacional).
+    /// </summary>
+    /// <returns></returns>
+    [Fact]
+    public async Task CreateNotificationTest()
+    {
+        // Executar o método de envio de notificação
+        await _notificationService.CreateNotification(new Guid("732eeeef-8a09-4a3f-90af-6dcb67a9fcad"));
+
+        Console.WriteLine("Notificação criada com sucesso!");
+    }
 }

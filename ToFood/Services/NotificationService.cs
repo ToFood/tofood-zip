@@ -1,9 +1,15 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Amazon.SQS;
+using Amazon.SQS.Model;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MimeKit;
+using System.Text.Json;
 using ToFood.Domain.DB.Relational;
+using ToFood.Domain.Entities.Relational;
 using ToFood.Domain.Enums;
 using ToFood.Domain.Extensions;
+using ToFood.Domain.Helpers;
 using ToFood.Domain.Services.Notifications;
 
 namespace ToFood.Domain.Services;
@@ -27,7 +33,7 @@ public class NotificationService
     /// </summary>
     /// <param name="notificationId">ID da notificação.</param>
     /// <returns></returns>
-    public async Task SendEmail(long notificationId)
+    internal async Task SendEmail(long notificationId)
     {
         try
         {
@@ -44,6 +50,14 @@ public class NotificationService
                     n.Text,
                     n.Subject,
                     n.TemplateText,
+                    n.Attempt,
+                    n.Status,
+                    n.SentAt,
+                    n.Operation,
+                    n.Type,
+                    n.FileId,
+                    n.CreatedAt,
+                    n.FileNotificationServiceId,
                     File = new
                     {
                         n.Video.FileName,
@@ -66,7 +80,7 @@ public class NotificationService
             }
 
             // Verifica se o e-mail de destino é válido
-            if (string.IsNullOrWhiteSpace(fileNotification.Email) || !fileNotification.Email.IsValidEmail())
+            if (!fileNotification.Email.IsValidEmail())
             {
                 // Atualiza a notificação como inválida
                 await _dbRelationalContext.FileNotifications
@@ -134,4 +148,120 @@ public class NotificationService
             throw;
         }
     }
+
+    /// <summary>
+    /// Cria uma notificação no banco de dados e, em seguida, envia para a fila SQS.
+    /// </summary>
+    /// <param name="fileId">O ID do arquivo relacionado à notificação (opcional).</param>
+    /// <returns></returns>
+    public async Task CreateAndSendNotificationAsync(Guid fileId)
+    {
+        try
+        {
+            // Criação da notificação
+            var notificationId = await CreateNotification(fileId);
+
+            // Envio para a fila SQS
+            await SendNotificationToSqs(notificationId);
+
+            _logger.LogInformation($"Notificação {notificationId} criada e enviada para a fila SQS com sucesso.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao criar ou enviar a notificação para a fila SQS.");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Cria uma notificação no banco de dados.
+    /// </summary>
+    /// <param name="fileId">O ID do arquivo relacionado à notificação (opcional).</param>
+    /// <returns>O ID da notificação criada.</returns>
+    internal async Task<long> CreateNotification(Guid fileId)
+    {
+        string email = "robert.ads.anjos@gmail.com"; // TODO: PEGAR DO TOKEN
+
+        if (!email.IsValidEmail())
+        {
+            throw new ArgumentException("Email inválido ou vazio.", nameof(email));
+        }
+
+        var notificationService = await _dbRelationalContext.FileNotificationServices
+            .AsNoTracking()
+            .Where(fs => fs.IsActive)
+            .Where(fs => fs.Type == NotificationType.Email)
+            .FirstOrDefaultAsync();
+
+        var notification = new FileNotification
+        {
+            Email = email,
+            Subject = notificationService?.Title,
+            Text = notificationService?.Text,
+            TemplateText = notificationService?.TemplateText,
+            Status = NotificationStatus.WaitingToBeSent,
+            CreatedAt = DateTime.UtcNow,
+            FileId = fileId,
+            SentAt = null,
+            FileNotificationServiceId = notificationService?.Id,
+            Type = NotificationType.Email,
+        };
+
+        await _dbRelationalContext.FileNotifications.AddAsync(notification);
+        await _dbRelationalContext.SaveChangesAsync();
+
+        _logger.LogInformation($"Notificação {notification.Id} criada com sucesso.");
+        return notification.Id;
+    }
+
+    /// <summary>
+    /// Envia uma notificação para a fila SQS.
+    /// </summary>
+    /// <param name="notificationId">O ID da notificação.</param>
+    /// <returns></returns>
+    private async Task SendNotificationToSqs(long notificationId)
+    {
+        // Busca a notificação pelo ID
+        var notification = await _dbRelationalContext.FileNotifications
+            .AsNoTracking()
+            .Where(n => n.Id == notificationId)
+            .FirstOrDefaultAsync();
+
+        if (notification == null)
+        {
+            throw new Exception($"A notificação {notificationId} não foi encontrada.");
+        }
+
+        var notificationMessage = new
+        {
+            NotificationId = notification.Id,
+            Email = notification.Email,
+            Subject = notification.Subject,
+            Text = notification.Text,
+            TemplateText = notification.TemplateText,
+            FileId = notification.FileId,
+            CreatedAt = notification.CreatedAt
+        };
+
+        try
+        {
+            // Configuração do cliente SQS (substitua pela configuração real)
+            var sqsClient = new AmazonSQSClient();
+            var sendMessageRequest = new SendMessageRequest
+            {
+                QueueUrl = "https://sqs.us-east-1.amazonaws.com/123456789012/MyQueue", // Substituir pela URL correta da fila SQS
+                MessageBody = JsonSerializer.Serialize(notificationMessage)
+            };
+
+            await sqsClient.SendMessageAsync(sendMessageRequest);
+
+            _logger.LogInformation($"Notificação {notificationId} enviada para a fila SQS com sucesso.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Erro ao enviar a notificação {notificationId} para a fila SQS.");
+            throw;
+        }
+    }
+
 }

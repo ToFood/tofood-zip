@@ -31,4 +31,27 @@ public static class JWTHelper
 
         return userId;
     }
+
+    /// <summary>
+    /// Obtém o email do usuário autenticado.
+    /// </summary>
+    /// <returns>O email do usuário autenticado ou null se não for encontrado.</returns>
+    public static string? GetAuthenticatedUserEmail(IHttpContextAccessor httpContextAccessor)
+    {
+        if (httpContextAccessor == null)
+        {
+            throw new ArgumentNullException(nameof(httpContextAccessor));
+        }
+
+        var user = httpContextAccessor.HttpContext?.User;
+        if (user == null)
+        {
+            return null;
+        }
+
+        // Busca o claim "email" que contém o email do usuário
+        var emailClaim = user.Claims.FirstOrDefault(c => c.Type == "userEmail");
+        return emailClaim?.Value;
+    }
+
 }
