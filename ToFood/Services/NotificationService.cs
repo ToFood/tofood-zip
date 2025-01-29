@@ -188,7 +188,11 @@ public class NotificationService : INotificationService
     /// <returns>O ID da notificação criada.</returns>
     internal async Task<long> CreateNotification(Guid fileId)
     {
-        string email = "robert.ads.anjos@gmail.com"; // TODO: PEGAR DO TOKEN
+
+        var email = await _dbRelationalContext.Videos
+            .Where(v => v.Id == fileId)       // Filtra antes de selecionar
+            .Select(v => v.User.Email)        // Seleciona o email após o filtro
+            .FirstOrDefaultAsync();
 
         if (!email.IsValidEmail())
         {
