@@ -45,75 +45,75 @@ jobs:
       - name: Build Project
         run: dotnet build --no-restore --configuration Release
 
-  # # Job de análise (analyze) que irá verificar as regras referente a padronização e qualidade de código
-  # code-quality:
-  #   name: 🎨 Code Quality
-  #   runs-on: ubuntu-latest
-  #   needs: build
+  # Job de análise (analyze) que irá verificar as regras referente a padronização e qualidade de código
+  code-quality:
+    name: 🎨 Code Quality
+    runs-on: ubuntu-latest
+    needs: build
 
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v2
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-  # # Teste unitário e isolado de um método especifico
-  # unitary-test:
-  #   name: 🧪 Unitary Test
-  #   runs-on: ubuntu-latest
-  #   needs: [code-quality]
+  # Teste unitário e isolado de um método especifico
+  unitary-test:
+    name: 🧪 Unitary Test
+    runs-on: ubuntu-latest
+    needs: [code-quality]
 
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v2
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-  # # Teste de APIs - Conexões entre serviços
-  # integration-test:
-  #   name: ⚗️ Integration Test
-  #   runs-on: ubuntu-latest
-  #   needs: [code-quality]
+  # Teste de APIs - Conexões entre serviços
+  integration-test:
+    name: ⚗️ Integration Test
+    runs-on: ubuntu-latest
+    needs: [code-quality]
 
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v2
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-  # # Teste Completos de funcionalidades
-  # system-test:
-  #   name: 🔬 System Test
-  #   runs-on: ubuntu-latest
-  #   needs: [code-quality]
+  # Teste Completos de funcionalidades
+  system-test:
+    name: 🔬 System Test
+    runs-on: ubuntu-latest
+    needs: [code-quality]
 
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v2
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-  # api-dockers:
-  #   name: 🐋 -> 🌐 APIs
-  #   runs-on: ubuntu-latest
-  #   needs: [unitary-test, integration-test, system-test]
-  #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  api-dockers:
+    name: 🐋 -> 🌐 APIs
+    runs-on: ubuntu-latest
+    needs: [unitary-test, integration-test, system-test]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
-  #   steps:
-  #     - name: Fazer checkout do repositório
-  #       uses: actions/checkout@v2
+    steps:
+      - name: Fazer checkout do repositório
+        uses: actions/checkout@v2
 
-  # worker-dockers:
-  #   name: 🐋 -> 🤖 Workers
-  #   runs-on: ubuntu-latest
-  #   needs: [unitary-test, integration-test, system-test]
-  #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  worker-dockers:
+    name: 🐋 -> 🤖 Workers
+    runs-on: ubuntu-latest
+    needs: [unitary-test, integration-test, system-test]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
-  #   steps:
-  #     - name: Fazer checkout do repositório
-  #       uses: actions/checkout@v2
+    steps:
+      - name: Fazer checkout do repositório
+        uses: actions/checkout@v2
 
-  # queue-dockers:
-  #   name: 🐋 -> 🐇 Queues
-  #   runs-on: ubuntu-latest
-  #   needs: [unitary-test, integration-test, system-test]
-  #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  queue-dockers:
+    name: 🐋 -> 🐇 Queues
+    runs-on: ubuntu-latest
+    needs: [unitary-test, integration-test, system-test]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
-  #   steps:
-  #     - name: Fazer checkout do repositório
-  #       uses: actions/checkout@v2
+    steps:
+      - name: Fazer checkout do repositório
+        uses: actions/checkout@v2
 
   deploy:
     name: 🚀 -> 📦 Deploy [AWS]
