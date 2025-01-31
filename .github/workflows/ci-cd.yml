@@ -169,12 +169,6 @@ jobs:
           TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition tofood-task --query 'taskDefinition.taskDefinitionArn' --output text)
           aws ecs update-service --cluster tofood-cluster --service tofood-service --task-definition $TASK_DEFINITION
 
-      - name: Wait for ECS service to stabilize
-        run: |
-          aws ecs wait services-stable \
-            --cluster tofood-cluster \
-            --service tofood-service
-
       - name: Clean up Docker images
         run: |
           docker rmi tofood-app:latest
