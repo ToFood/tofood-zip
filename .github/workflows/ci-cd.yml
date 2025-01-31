@@ -130,27 +130,6 @@ jobs:
       - name: Checkout código
         uses: actions/checkout@v2
 
-      - name: Instalar envsubst
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gettext-base
-
-      - name: Substituir variáveis no task-definition.json
-        env:
-          REPOSITORY_URI: ${{ secrets.AWS_REPOSITORY_URI }}
-          ROLE_ARN: ${{ secrets.ROLE_ARN }}
-        run: |
-          envsubst < task-definition.json > task-definition-updated.json
-          cat task-definition-updated.json
-
-      - name: Exibir task-definition-updated.json
-        run: |
-          cat task-definition-updated.json
-
-      - name: Registrar nova Task Definition no ECS
-        run: |
-          aws ecs register-task-definition --cli-input-json file://task-definition-updated.json
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -168,20 +147,26 @@ jobs:
           docker tag tofood-app:latest ${{ env.AWS_REPOSITORY_URI }}:latest
           docker push ${{ env.AWS_REPOSITORY_URI }}:latest
 
-      - name: Atualizar Task Definition
+      - name: Instalar envsubst
         run: |
-          # Substitui a URI da imagem no task-definition.json
-          sed -i "s|<repositoryUri>:latest|${{ env.AWS_REPOSITORY_URI }}:latest|g" task-definition.json
+          sudo apt-get update
+          sudo apt-get install -y gettext-base
 
-          # Registra a nova task definition
-          aws ecs register-task-definition --cli-input-json file://task-definition.json
+      - name: Substituir variáveis no task-definition.json
+        env:
+          REPOSITORY_URI: ${{ env.AWS_REPOSITORY_URI }}
+          ROLE_ARN: ${{ secrets.ROLE_ARN }}
+        run: |
+          envsubst < task-definition.json > task-definition-updated.json
+          cat task-definition-updated.json
+
+      - name: Registrar nova Task Definition no ECS
+        run: |
+          aws ecs register-task-definition --cli-input-json file://task-definition-updated.json
 
       - name: Atualizar Serviço ECS
         run: |
-          # Obtém a versão mais recente da task definition
           TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition tofood-task --query 'taskDefinition.taskDefinitionArn' --output text)
-
-          # Atualiza o serviço ECS para usar a nova task definition
           aws ecs update-service --cluster tofood-cluster --service tofood-service --task-definition $TASK_DEFINITION
 
       - name: Wait for ECS service to stabilize
