@@ -10,19 +10,20 @@ on:
     branches:
       - main
 
-
 env:
   DOTNET_VERSION: ${{ vars.DOTNET_VERSION }}
   DEVEXPRESS_TOKEN: ${{ vars.DEVEXPRESS_TOKEN }}
   DOCKER_USERNAME: ${{ vars.DOCKER_USERNAME }}
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
   DOCKER_REGISTRY: docker.io
+  REPOSITORY_URI: ${{ secrets.ECR_REPOSITORY }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}
 
 jobs:
-
   # Verifica as vunerabilidades da Aplicação
   #security-vulnerability:
-
 
   # Irá fazer um build completo da solução para verificar se o projeto está rodando normalmente
   build:
@@ -38,93 +39,136 @@ jobs:
         with:
           dotnet-version: 9.0.x
 
-
       - name: Install Dependencies
         run: dotnet restore
 
       - name: Build Project
         run: dotnet build --no-restore --configuration Release
 
+  # # Job de análise (analyze) que irá verificar as regras referente a padronização e qualidade de código
+  # code-quality:
+  #   name: 🎨 Code Quality
+  #   runs-on: ubuntu-latest
+  #   needs: build
 
-  # Job de análise (analyze) que irá verificar as regras referente a padronização e qualidade de código
-  code-quality:
-    name: 🎨 Code Quality
-    runs-on: ubuntu-latest
-    needs: build
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v2
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+  # # Teste unitário e isolado de um método especifico
+  # unitary-test:
+  #   name: 🧪 Unitary Test
+  #   runs-on: ubuntu-latest
+  #   needs: [code-quality]
 
-  # Teste unitário e isolado de um método especifico
-  unitary-test:
-    name: 🧪 Unitary Test
-    runs-on: ubuntu-latest
-    needs: [code-quality]
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v2
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-   
+  # # Teste de APIs - Conexões entre serviços
+  # integration-test:
+  #   name: ⚗️ Integration Test
+  #   runs-on: ubuntu-latest
+  #   needs: [code-quality]
 
-  # Teste de APIs - Conexões entre serviços
-  integration-test:
-    name: ⚗️ Integration Test
-    runs-on: ubuntu-latest
-    needs: [code-quality]
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v2
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-        
-  # Teste Completos de funcionalidades
-  system-test:
-    name: 🔬 System Test
-    runs-on: ubuntu-latest
-    needs: [code-quality]
+  # # Teste Completos de funcionalidades
+  # system-test:
+  #   name: 🔬 System Test
+  #   runs-on: ubuntu-latest
+  #   needs: [code-quality]
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v2
 
-  api-dockers:
-    name: 🐋 -> 🌐 APIs
-    runs-on: ubuntu-latest
-    needs: [unitary-test, integration-test, system-test]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  # api-dockers:
+  #   name: 🐋 -> 🌐 APIs
+  #   runs-on: ubuntu-latest
+  #   needs: [unitary-test, integration-test, system-test]
+  #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
-    steps:
-      - name: Fazer checkout do repositório
-        uses: actions/checkout@v2
-    
+  #   steps:
+  #     - name: Fazer checkout do repositório
+  #       uses: actions/checkout@v2
 
-  worker-dockers:
-    name: 🐋 -> 🤖 Workers
-    runs-on: ubuntu-latest
-    needs: [unitary-test, integration-test, system-test]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  # worker-dockers:
+  #   name: 🐋 -> 🤖 Workers
+  #   runs-on: ubuntu-latest
+  #   needs: [unitary-test, integration-test, system-test]
+  #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
-    steps:
-      - name: Fazer checkout do repositório
-        uses: actions/checkout@v2
+  #   steps:
+  #     - name: Fazer checkout do repositório
+  #       uses: actions/checkout@v2
 
-  queue-dockers:
-    name: 🐋 -> 🐇 Queues
-    runs-on: ubuntu-latest
-    needs: [unitary-test, integration-test, system-test]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  # queue-dockers:
+  #   name: 🐋 -> 🐇 Queues
+  #   runs-on: ubuntu-latest
+  #   needs: [unitary-test, integration-test, system-test]
+  #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
-    steps:
-      - name: Fazer checkout do repositório
-        uses: actions/checkout@v2
-
+  #   steps:
+  #     - name: Fazer checkout do repositório
+  #       uses: actions/checkout@v2
 
   deploy:
-    name: 🚀 -> 📦 Deploy [AWS]
-    runs-on: ubuntu-latest
-    needs: [queue-dockers, worker-dockers, api-dockers]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  name: 🚀 -> 📦 Deploy [AWS]
+  runs-on: ubuntu-latest
+  needs: [queue-dockers, worker-dockers, api-dockers]
+  if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
-    steps:
-      - name: Fazer checkout do repositório
-        uses: actions/checkout@v2
+  env:
+    REPOSITORY_URI: ${{ secrets.REPOSITORY_URI }}
+    AWS_REGION: us-east-1
+
+  steps:
+    - name: Checkout código
+      uses: actions/checkout@v2
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login no AWS ECR
+      run: |
+        aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.REPOSITORY_URI }}
+
+    - name: Construir e enviar imagem Docker
+      run: |
+        docker build -t tofood-app .
+        docker tag tofood-app:latest ${{ env.REPOSITORY_URI }}:latest
+        docker push ${{ env.REPOSITORY_URI }}:latest
+
+    - name: Atualizar Task Definition
+      run: |
+        # Substitui a URI da imagem no task-definition.json
+        sed -i "s|<repositoryUri>:latest|${{ env.REPOSITORY_URI }}:latest|g" task-definition.json
+
+        # Registra a nova task definition
+        aws ecs register-task-definition --cli-input-json file://task-definition.json
+
+    - name: Atualizar Serviço ECS
+      run: |
+        # Obtém a versão mais recente da task definition
+        TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition tofood-task --query 'taskDefinition.taskDefinitionArn' --output text)
+
+        # Atualiza o serviço ECS para usar a nova task definition
+        aws ecs update-service --cluster tofood-cluster --service tofood-service --task-definition $TASK_DEFINITION
+
+    - name: Wait for ECS service to stabilize
+      run: |
+        aws ecs wait services-stable \
+          --cluster tofood-cluster \
+          --service tofood-service
+
+    - name: Clean up Docker images
+      run: |
+        docker rmi tofood-app:latest
+        docker rmi ${{ env.REPOSITORY_URI }}:latest
