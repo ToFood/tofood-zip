@@ -146,9 +146,21 @@ jobs:
         docker tag tofood-app:latest ${{ env.REPOSITORY_URI }}:latest
         docker push ${{ env.REPOSITORY_URI }}:latest
 
-    - name: Atualizar Task Definition e Serviço ECS
+    - name: Atualizar Task Definition
       run: |
-        aws ecs update-service --cluster tofood-cluster --service tofood-service --force-new-deployment
+        # Substitui a URI da imagem no task-definition.json
+        sed -i "s|<repositoryUri>:latest|${{ env.REPOSITORY_URI }}:latest|g" task-definition.json
+
+        # Registra a nova task definition
+        aws ecs register-task-definition --cli-input-json file://task-definition.json
+
+    - name: Atualizar Serviço ECS
+      run: |
+        # Obtém a versão mais recente da task definition
+        TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition tofood-task --query 'taskDefinition.taskDefinitionArn' --output text)
+
+        # Atualiza o serviço ECS para usar a nova task definition
+        aws ecs update-service --cluster tofood-cluster --service tofood-service --task-definition $TASK_DEFINITION
 
     - name: Wait for ECS service to stabilize
       run: |
