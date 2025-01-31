@@ -16,7 +16,7 @@ env:
   DOCKER_USERNAME: ${{ vars.DOCKER_USERNAME }}
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
   DOCKER_REGISTRY: docker.io
-  REPOSITORY_URI: ${{ secrets.ECR_REPOSITORY }}
+  AWS_REPOSITORY_URI: ${{ secrets.AWS_REPOSITORY_URI }}
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   AWS_REGION: ${{ secrets.AWS_REGION }}
@@ -122,7 +122,7 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     env:
-      REPOSITORY_URI: ${{ secrets.REPOSITORY_URI }}
+      AWS_REPOSITORY_URI: ${{ secrets.AWS_REPOSITORY_URI }}
       AWS_REGION: us-east-1
 
     steps:
@@ -138,18 +138,18 @@ jobs:
 
       - name: Login no AWS ECR
         run: |
-          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.REPOSITORY_URI }}
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.AWS_REPOSITORY_URI }}
 
       - name: Construir e enviar imagem Docker
         run: |
           docker build -t tofood-app .
-          docker tag tofood-app:latest ${{ env.REPOSITORY_URI }}:latest
-          docker push ${{ env.REPOSITORY_URI }}:latest
+          docker tag tofood-app:latest ${{ env.AWS_REPOSITORY_URI }}:latest
+          docker push ${{ env.AWS_REPOSITORY_URI }}:latest
 
       - name: Atualizar Task Definition
         run: |
           # Substitui a URI da imagem no task-definition.json
-          sed -i "s|<repositoryUri>:latest|${{ env.REPOSITORY_URI }}:latest|g" task-definition.json
+          sed -i "s|<repositoryUri>:latest|${{ env.AWS_REPOSITORY_URI }}:latest|g" task-definition.json
 
           # Registra a nova task definition
           aws ecs register-task-definition --cli-input-json file://task-definition.json
@@ -171,4 +171,4 @@ jobs:
       - name: Clean up Docker images
         run: |
           docker rmi tofood-app:latest
-          docker rmi ${{ env.REPOSITORY_URI }}:latest
+          docker rmi ${{ env.AWS_REPOSITORY_URI }}:latest
