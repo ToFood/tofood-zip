@@ -129,6 +129,23 @@ jobs:
       - name: Checkout código
         uses: actions/checkout@v2
 
+      - name: Instalar envsubst
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gettext-base
+
+      - name: Substituir variáveis no task-definition.json
+        env:
+          REPOSITORY_URI: ${{ secrets.AWS_REPOSITORY_URI }}
+          ROLE_ARN: ${{ secrets.ROLE_ARN }}
+        run: |
+          envsubst < task-definition.json > task-definition-updated.json
+          cat task-definition-updated.json
+
+      - name: Registrar nova Task Definition no ECS
+        run: |
+          aws ecs register-task-definition --cli-input-json file://task-definition-updated.json
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:

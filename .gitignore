@@ -1,20 +1,19 @@
-# Diretórios de configuração do Visual Studio e Rider
+# Diretï¿½rios de configuraï¿½ï¿½o do Visual Studio e Rider
 .vs/
 .vscode/
 .idea/
 
-# Arquivos temporários e backups
+# Arquivos temporï¿½rios e backups
 *.swp
-*.*~
 .DS_Store
 
-# Diretórios de compilação
+# Diretï¿½rios de compilaï¿½ï¿½o
 **/bin/
 **/obj/
 **/Debug/
 **/Release/
 
-# Logs, caches e arquivos temporários
+# Logs, caches e arquivos temporï¿½rios
 *.log
 *.tmp
 *.temp
@@ -29,7 +28,7 @@ project.nuget.cache
 *.nuget.g.props
 *.nuget.g.targets
 
-# Arquivos temporários do MSBuild
+# Arquivos temporï¿½rios do MSBuild
 *.CoreCompileInputs.cache
 *.FileListAbsolute.txt
 *.AssemblyReference.cache
@@ -39,17 +38,16 @@ project.nuget.cache
 *.dll
 *.exe
 *.pdb
-*.json
 *.txt
 *.sourcelink.json
 
-# Arquivos de configuração do usuário
+# Arquivos de configuraï¿½ï¿½o do usuï¿½rio
 *.suo
 *.user
 *.userosscache
 *.sln.docstates
 
-# Diretórios ou arquivos específicos do projeto
+# Diretï¿½rios ou arquivos especï¿½ficos do projeto
 ToFood.ZipAPI/Uploads/
 ToFood.ZipAPI/Output/
 /ToFood.ZipAPI/bin/
