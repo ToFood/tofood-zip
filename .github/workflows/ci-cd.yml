@@ -10,7 +10,6 @@ on:
     branches:
       - main
 
-
 env:
   DOTNET_VERSION: ${{ vars.DOTNET_VERSION }}
   DEVEXPRESS_TOKEN: ${{ vars.DEVEXPRESS_TOKEN }}
@@ -19,10 +18,8 @@ env:
   DOCKER_REGISTRY: docker.io
 
 jobs:
-
   # Verifica as vunerabilidades da Aplicação
   #security-vulnerability:
-
 
   # Irá fazer um build completo da solução para verificar se o projeto está rodando normalmente
   build:
@@ -38,86 +35,81 @@ jobs:
         with:
           dotnet-version: 9.0.x
 
-
       - name: Install Dependencies
         run: dotnet restore
 
       - name: Build Project
         run: dotnet build --no-restore --configuration Release
 
+  # # Job de análise (analyze) que irá verificar as regras referente a padronização e qualidade de código
+  # code-quality:
+  #   name: 🎨 Code Quality
+  #   runs-on: ubuntu-latest
+  #   needs: build
 
-  # Job de análise (analyze) que irá verificar as regras referente a padronização e qualidade de código
-  code-quality:
-    name: 🎨 Code Quality
-    runs-on: ubuntu-latest
-    needs: build
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v2
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+  # # Teste unitário e isolado de um método especifico
+  # unitary-test:
+  #   name: 🧪 Unitary Test
+  #   runs-on: ubuntu-latest
+  #   needs: [code-quality]
 
-  # Teste unitário e isolado de um método especifico
-  unitary-test:
-    name: 🧪 Unitary Test
-    runs-on: ubuntu-latest
-    needs: [code-quality]
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v2
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-   
+  # # Teste de APIs - Conexões entre serviços
+  # integration-test:
+  #   name: ⚗️ Integration Test
+  #   runs-on: ubuntu-latest
+  #   needs: [code-quality]
 
-  # Teste de APIs - Conexões entre serviços
-  integration-test:
-    name: ⚗️ Integration Test
-    runs-on: ubuntu-latest
-    needs: [code-quality]
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v2
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-        
-  # Teste Completos de funcionalidades
-  system-test:
-    name: 🔬 System Test
-    runs-on: ubuntu-latest
-    needs: [code-quality]
+  # # Teste Completos de funcionalidades
+  # system-test:
+  #   name: 🔬 System Test
+  #   runs-on: ubuntu-latest
+  #   needs: [code-quality]
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v2
 
-  api-dockers:
-    name: 🐋 -> 🌐 APIs
-    runs-on: ubuntu-latest
-    needs: [unitary-test, integration-test, system-test]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  # api-dockers:
+  #   name: 🐋 -> 🌐 APIs
+  #   runs-on: ubuntu-latest
+  #   needs: [unitary-test, integration-test, system-test]
+  #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
-    steps:
-      - name: Fazer checkout do repositório
-        uses: actions/checkout@v2
-    
+  #   steps:
+  #     - name: Fazer checkout do repositório
+  #       uses: actions/checkout@v2
 
-  worker-dockers:
-    name: 🐋 -> 🤖 Workers
-    runs-on: ubuntu-latest
-    needs: [unitary-test, integration-test, system-test]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  # worker-dockers:
+  #   name: 🐋 -> 🤖 Workers
+  #   runs-on: ubuntu-latest
+  #   needs: [unitary-test, integration-test, system-test]
+  #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
-    steps:
-      - name: Fazer checkout do repositório
-        uses: actions/checkout@v2
+  #   steps:
+  #     - name: Fazer checkout do repositório
+  #       uses: actions/checkout@v2
 
-  queue-dockers:
-    name: 🐋 -> 🐇 Queues
-    runs-on: ubuntu-latest
-    needs: [unitary-test, integration-test, system-test]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  # queue-dockers:
+  #   name: 🐋 -> 🐇 Queues
+  #   runs-on: ubuntu-latest
+  #   needs: [unitary-test, integration-test, system-test]
+  #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
-    steps:
-      - name: Fazer checkout do repositório
-        uses: actions/checkout@v2
-
+  #   steps:
+  #     - name: Fazer checkout do repositório
+  #       uses: actions/checkout@v2
 
   deploy:
     name: 🚀 -> 📦 Deploy [AWS]
@@ -126,5 +118,19 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:
-      - name: Fazer checkout do repositório
+      - name: Checkout código
         uses: actions/checkout@v2
+
+      - name: Login no AWS ECR
+        run: |
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <repositoryUri>
+
+      - name: Construir e enviar imagem Docker
+        run: |
+          docker build -t tofood-app .
+          docker tag tofood-app:latest <repositoryUri>:latest
+          docker push <repositoryUri>:latest
+
+      - name: Atualizar Task Definition e Serviço ECS
+        run: |
+          aws ecs update-service --cluster tofood-cluster --service tofood-service --force-new-deployment
