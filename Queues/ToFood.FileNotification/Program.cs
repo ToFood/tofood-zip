@@ -14,13 +14,26 @@ class Program
 {
     static async Task Main(string[] args)
     {
+        var configBuilder = new ConfigurationBuilder()
+            .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\"))
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            .AddEnvironmentVariables();
+
+        var config = configBuilder.Build();
+
+        // Recuperar os segredos do AWS Secrets Manager
+        var secrets = await SecretsHelper.GetSecretsAWS(config);
+
+        // Adicionar os segredos ao IConfiguration
+        foreach (var secret in secrets)
+        {
+            config[secret.Key] = secret.Value;
+        }
+
         var builder = Host.CreateDefaultBuilder(args)
             .ConfigureAppConfiguration(configBuilder =>
             {
-                // Configuração do caminho para o appsettings.json
-                configBuilder.SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\"))
-                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                    .AddEnvironmentVariables();
+                configBuilder.AddConfiguration(config);
             })
             .ConfigureServices((context, services) =>
             {

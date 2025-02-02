@@ -12,6 +12,15 @@ using ToFood.Domain.Services.TokenManager;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Recuperar os segredos do AWS Secrets Manager
+var secrets = await SecretsHelper.GetSecretsAWS(builder.Configuration);
+
+// Adicionar os segredos ao builder.Configuration
+foreach (var secret in secrets)
+{
+    builder.Configuration[secret.Key] = secret.Value;
+}
+
 // Configuração do JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

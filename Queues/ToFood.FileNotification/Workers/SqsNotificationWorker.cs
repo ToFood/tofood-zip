@@ -57,6 +57,10 @@ public class SqsNotificationWorker : BackgroundService
             {
                 _logger.LogError(ex, "Erro ao consumir mensagens da fila SQS.");
             }
+
+            // Temporizador antes da próxima iteração
+            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+
         }
 
         _logger.LogInformation("SQS Notification Worker finalizado.");

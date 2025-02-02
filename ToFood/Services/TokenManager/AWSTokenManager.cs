@@ -19,7 +19,7 @@ public class AWSTokenManager
                 new BasicAWSCredentials(
                     configuration["AWS:AccessKey"],
                     configuration["AWS:SecretKey"]
-                    ),
+                ),
                 RegionEndpoint.GetBySystemName(configuration["AWS:Region"] ?? "us-east-1")
             );
         }
@@ -31,14 +31,14 @@ public class AWSTokenManager
     }
 
     /// <summary>
-    /// Testa a conexão com a AWS.
+    /// Testa a conexão com a AWS para SQS e Secrets Manager.
     /// </summary>
     /// <param name="configuration">Configuração do sistema.</param>
     public static async void TestAWSConnection(IConfiguration configuration)
     {
         try
         {
-            // Obter o cliente AWS configurado
+            // Testar SQS
             var sqsClient = GetAWSClient(configuration);
 
             // Tentar listar filas para testar a conexão

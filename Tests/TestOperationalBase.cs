@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using ToFood.Domain.DB.Relational;
+using ToFood.Domain.Helpers;
 
 namespace ToFood.Tests;
 
@@ -31,6 +32,14 @@ public abstract class TestOperationalBase : IDisposable
             .AddEnvironmentVariables()
             .Build();
 
+        // Recuperar os segredos do AWS Secrets Manager
+        var secrets = SecretsHelper.GetSecretsAWS(Configuration).Result;
+
+        // Adicionar os segredos ao IConfiguration
+        foreach (var secret in secrets)
+        {
+            Configuration[secret.Key] = secret.Value;
+        }
 
 
         // Obter a connection string do PostgreSQL
