@@ -60,3 +60,6 @@ ToFood.ZipAPI/Output/
 /ToFood.ZipAPI/bin/Debug/net9.0/appsettings.json
 /ToFood.ZipAPI/bin/Debug/net9.0/
 /ToFood.ZipAPI/obj/Debug/net9.0/
+/Queues/ToFood.FileNotification/appsettings.json
+/Tests/appsettings.json
+/ToFood.ZipAPI/appsettings.json
