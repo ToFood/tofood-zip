@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="appsettings.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.1" />
     <PackageReference Include="SharpZipLib" Version="1.4.2" />
@@ -21,6 +25,10 @@
   <ItemGroup>
     <Folder Include="Output\Zips\" />
     <Folder Include="Output\Videos\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="appsettings.json" />
   </ItemGroup>
 
 </Project>
