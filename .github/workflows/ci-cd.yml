@@ -153,7 +153,7 @@ jobs:
           ECR_REPOSITORY: tofood-zip
           IMAGE_TAG: latest
         run: |
-          echo "$SSH_PRIVATE_KEY" | base64 --decode > key.pem
+          echo "$SSH_PRIVATE_KEY" > key.pem
           cat key.pem
           chmod 400 key.pem
           ssh -i key.pem -o StrictHostKeyChecking=no ubuntu@$EC2_HOST "
