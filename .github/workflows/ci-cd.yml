@@ -136,10 +136,10 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Extrair variáveis do GitHub Secrets
-        run: |
-          echo '${{ secrets.AWS_CREDENTIALS_JSON }}' > aws_credentials.json
-          cat aws_credentials.json | jq -r 'to_entries|map("export \(.key)=\(.value|tostring)")|.[]' >> $GITHUB_ENV
+    - name: Extrair variáveis do GitHub Secrets
+      run: |
+        echo '${{ secrets.AWS_CREDENTIALS_JSON }}' > aws_credentials.json
+        cat aws_credentials.json | jq -r 'to_entries|map("export \(.key)=\(.value|tostring)")|.[]' >> $GITHUB_ENV
 
     - name: Criar pasta e arquivo appsettings.json
       run: |
