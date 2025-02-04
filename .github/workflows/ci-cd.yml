@@ -149,7 +149,7 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           EC2_HOST: ${{ secrets.EC2_HOST }}
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: meu-repositorio
+          ECR_REPOSITORY: tofood-zip
           IMAGE_TAG: latest
         run: |
           echo "$SSH_PRIVATE_KEY" > key.pem
