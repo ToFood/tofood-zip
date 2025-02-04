@@ -161,5 +161,5 @@ jobs:
             docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
             docker stop app || true
             docker rm app || true
-            docker run -d --name app -p 80:80 $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+            docker run -d --name app -e AWS_SecretManager="tofood-config" -e AWS_AccessKey=$AWS_ACCESS_KEY_ID -e AWS_SecretKey=$AWS_SECRET_ACCESS_KEY -e AWS_Region=$AWS_REGION -p 80:80 $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           "
