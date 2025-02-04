@@ -12,6 +12,11 @@ using ToFood.Domain.Services.TokenManager;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
+
 // Recuperar os segredos do AWS Secrets Manager
 var secrets = await SecretsHelper.GetSecretsAWS(builder.Configuration);
 
