@@ -116,55 +116,48 @@ jobs:
       - name: Fazer checkout do repositório
         uses: actions/checkout@v2
 
-  deploy:
-    name: 🚀 -> 📦 Deploy [AWS]
+  build-and-deploy:
     runs-on: ubuntu-latest
-    needs: [queue-dockers, worker-dockers, api-dockers]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-
-    env:
-      AWS_REPOSITORY_URI: ${{ secrets.AWS_REPOSITORY_URI }}
-      AWS_REGION: us-east-1
 
     steps:
-      - name: Checkout código
-        uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v3
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: us-east-1
 
-      - name: Login no AWS ECR
-        run: |
-          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.AWS_REPOSITORY_URI }}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Construir e enviar imagem Docker
-        run: |
-          docker build -t tofood-app .
-          docker tag tofood-app:latest ${{ env.AWS_REPOSITORY_URI }}:latest
-          docker push ${{ env.AWS_REPOSITORY_URI }}:latest
-
-      - name: Instalar envsubst
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gettext-base
-
-      - name: Substituir variáveis no task-definition.json
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
         env:
-          REPOSITORY_URI: ${{ env.AWS_REPOSITORY_URI }}
-          ROLE_ARN: ${{ secrets.ROLE_ARN }}
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: meu-repositorio
+          IMAGE_TAG: latest
         run: |
-          envsubst < task-definition.json > task-definition-updated.json
-          cat task-definition-updated.json
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-      - name: Registrar nova Task Definition no ECS
+      - name: Deploy to EC2
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: meu-repositorio
+          IMAGE_TAG: latest
         run: |
-          aws ecs register-task-definition --cli-input-json file://task-definition-updated.json
-
-      - name: Atualizar Serviço ECS
-        run: |
-          TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition tofood-task --query 'taskDefinition.taskDefinitionArn' --output text)
-          aws ecs update-service --cluster tofood-cluster --service tofood-service --task-definition $TASK_DEFINITION
+          echo "$SSH_PRIVATE_KEY" > key.pem
+          chmod 400 key.pem
+          ssh -i key.pem -o StrictHostKeyChecking=no ec2-user@$EC2_HOST "
+            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_REGISTRY
+            docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+            docker stop app || true
+            docker rm app || true
+            docker run -d --name app -p 80:80 $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          "
