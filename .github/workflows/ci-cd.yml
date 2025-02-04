@@ -144,16 +144,16 @@ jobs:
       - name: Criar pasta e arquivo appsettings.json
         run: |
           # Cria a pasta e o arquivo appsettings.json no diretório correto
-          mkdir -p ./ToFood.ZipAPI/appsettings.json
-          echo "{" > ./ToFood.ZipAPI/appsettings.json
-          echo '  "AWS": {' >> ./ToFood.ZipAPI/appsettings.json
-          echo '    "SecretManager": "'${{ secrets.AWS__SecretManager }}'",' >> ./ToFood.ZipAPI/appsettings.json
-          echo '    "AccessKey": "'${{ secrets.AWS__AccessKey }}'",' >> ./ToFood.ZipAPI/appsettings.json
-          echo '    "SecretKey": "'${{ secrets.AWS__SecretKey }}'",' >> ./ToFood.ZipAPI/appsettings.json
-          echo '    "Region": "'${{ secrets.AWS__Region }}'"' >> ./ToFood.ZipAPI/appsettings.json
-          echo '  }' >> ./ToFood.ZipAPI/appsettings.json
-          echo "}" >> ./ToFood.ZipAPI/appsettings.json
-          cat ./ToFood.ZipAPI/appsettings.json  # Exibe o conteúdo do arquivo gerado para debug
+          mkdir -p ./ToFood.ZipAPI/appsettings
+          echo "{" > ./ToFood.ZipAPI/appsettings/appsettings.json
+          echo '  "AWS": {' >> ./ToFood.ZipAPI/appsettings/appsettings.json
+          echo '    "SecretManager": "'${{ secrets.AWS__SecretManager }}'",' >> ./ToFood.ZipAPI/appsettings/appsettings.json
+          echo '    "AccessKey": "'${{ secrets.AWS__AccessKey }}'",' >> ./ToFood.ZipAPI/appsettings/appsettings.json
+          echo '    "SecretKey": "'${{ secrets.AWS__SecretKey }}'",' >> ./ToFood.ZipAPI/appsettings/appsettings.json
+          echo '    "Region": "'${{ secrets.AWS__Region }}'"' >> ./ToFood.ZipAPI/appsettings/appsettings.json
+          echo '  }' >> ./ToFood.ZipAPI/appsettings/appsettings.json
+          echo "}" >> ./ToFood.ZipAPI/appsettings/appsettings.json
+          cat ./ToFood.ZipAPI/appsettings/appsettings.json  # Exibe o conteúdo do arquivo gerado para debug
 
       - name: Build, tag, and push image to Amazon ECR
         id: build-image

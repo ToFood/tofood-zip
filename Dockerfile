@@ -5,7 +5,7 @@ FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG configuration=Release
 WORKDIR /src
 COPY ["ToFood.ZipAPI/ToFood.ZipAPI.csproj", "ToFood.ZipAPI/"]
-COPY ToFood.ZipAPI/appsettings.json /app/appsettings.json
+COPY ToFood.ZipAPI/appsettings/appsettings.json /app/appsettings.json
 RUN dotnet restore "ToFood.ZipAPI/ToFood.ZipAPI.csproj"
 COPY . .
 WORKDIR "/src/ToFood.ZipAPI"
