@@ -138,22 +138,9 @@ jobs:
 
       - name: Extrair variáveis do GitHub Secrets
         run: |
+          set -e
           echo '${{ secrets.AWS_CREDENTIALS_JSON }}' > aws_credentials.json
           cat aws_credentials.json | jq -r 'to_entries|map("export \(.key)=\(.value|tostring)")|.[]' >> $GITHUB_ENV
-
-      - name: Criar pasta e arquivo appsettings.json
-        run: |
-          # Cria a pasta e o arquivo appsettings.json no diretório correto
-          mkdir -p ./ToFood.ZipAPI/appsettings
-          echo "{" > ./ToFood.ZipAPI/appsettings/appsettings.json
-          echo '  "AWS": {' >> ./ToFood.ZipAPI/appsettings/appsettings.json
-          echo '    "SecretManager": "'${{ secrets.AWS__SecretManager }}'",' >> ./ToFood.ZipAPI/appsettings/appsettings.json
-          echo '    "AccessKey": "'${{ secrets.AWS__AccessKey }}'",' >> ./ToFood.ZipAPI/appsettings/appsettings.json
-          echo '    "SecretKey": "'${{ secrets.AWS__SecretKey }}'",' >> ./ToFood.ZipAPI/appsettings/appsettings.json
-          echo '    "Region": "'${{ secrets.AWS__Region }}'"' >> ./ToFood.ZipAPI/appsettings/appsettings.json
-          echo '  }' >> ./ToFood.ZipAPI/appsettings/appsettings.json
-          echo "}" >> ./ToFood.ZipAPI/appsettings/appsettings.json
-          cat ./ToFood.ZipAPI/appsettings/appsettings.json  # Exibe o conteúdo do arquivo gerado para debug
 
       - name: Build, tag, and push image to Amazon ECR
         id: build-image
@@ -161,16 +148,8 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: tofood-zip
           IMAGE_TAG: latest
-          AWS__SecretManager: ${{ secrets.AWS__SecretManager }}
-          AWS__AccessKey: ${{ secrets.AWS__AccessKey }}
-          AWS__SecretKey: ${{ secrets.AWS__SecretKey }}
-          AWS__Region: ${{ secrets.AWS__Region }}
         run: |
-          docker build --build-arg AWS_SECRET_MANAGER=${{ secrets.AWS__SecretManager }} \
-                        --build-arg AWS_ACCESS_KEY=${{ secrets.AWS__AccessKey }} \
-                        --build-arg AWS_SECRET_KEY=${{ secrets.AWS__SecretKey }} \
-                        --build-arg AWS_REGION=${{ secrets.AWS__Region }} \
-                        -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
       - name: Deploy to EC2
@@ -180,6 +159,10 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: tofood-zip
           IMAGE_TAG: latest
+          AWS__SecretManager: ${{ secrets.AWS__SecretManager }}
+          AWS__AccessKey: ${{ secrets.AWS__AccessKey }}
+          AWS__SecretKey: ${{ secrets.AWS__SecretKey }}
+          AWS__Region: ${{ secrets.AWS__Region }}
         run: |
           echo "$SSH_PRIVATE_KEY" > key.pem
           chmod 400 key.pem
@@ -188,5 +171,5 @@ jobs:
             docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
             docker stop app || true
             docker rm app || true
-            docker run -d --name app -p 80:80 $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+            docker run -d --name app -e AWS__SecretManager=${{ secrets.AWS__SecretManager }} -e AWS__AccessKey=${{ secrets.AWS__AccessKey }} -e AWS__SecretKey=${{ secrets.AWS__SecretKey }} -e AWS__Region=${{ secrets.AWS__Region }} -p 8080:8080 $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           "
