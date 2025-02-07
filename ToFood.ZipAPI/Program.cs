@@ -12,6 +12,32 @@ using ToFood.Domain.Services.TokenManager;
 
 var builder = WebApplication.CreateBuilder(args);
 
+string appSettingsPath = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
+
+// Verifica se o arquivo appsettings.json existe
+if (!File.Exists(appSettingsPath))
+{
+
+    // Recupera as variáveis de ambiente ou define valores padrão
+    var secretManager = Environment.GetEnvironmentVariable("AWS__SecretManager");
+    var accessKey = Environment.GetEnvironmentVariable("AWS__AccessKey");
+    var secretKey = Environment.GetEnvironmentVariable("AWS__SecretKey");
+    var region = Environment.GetEnvironmentVariable("AWS__Region");
+
+    // Cria o arquivo appsettings.json com valores padrão
+    var defaultConfig = $@"
+            {{
+                ""AWS"": {{
+                    ""SecretManager"": ""{secretManager}"",
+                    ""AccessKey"": ""{accessKey}"",
+                    ""SecretKey"": ""{secretKey}"",
+                    ""Region"": ""{region}""
+                }}
+            }}";
+    File.WriteAllText(appSettingsPath, defaultConfig);
+    Console.WriteLine($"Arquivo appsettings.json criado em: {appSettingsPath}");
+}
+
 builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
@@ -118,11 +144,11 @@ builder.Services.AddEndpointsApiExplorer();
 var app = builder.Build();
 
 // Configuração do pipeline HTTP
-if (app.Environment.IsDevelopment())
-{
+//if (app.Environment.IsDevelopment())
+//{
     app.UseSwagger();
     app.UseSwaggerUI();
-}
+//}
 
 // Ativa o CORS antes de outras configurações
 app.UseCors("ToFoodCORS");

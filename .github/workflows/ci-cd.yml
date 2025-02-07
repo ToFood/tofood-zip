@@ -171,5 +171,5 @@ jobs:
             docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
             docker stop app || true
             docker rm app || true
-            docker run -d --name app -e AWS__SecretManager=${{ secrets.AWS__SecretManager }} -e AWS__AccessKey=${{ secrets.AWS__AccessKey }} -e AWS__SecretKey=${{ secrets.AWS__SecretKey }} -e AWS__Region=${{ secrets.AWS__Region }} -p 8080:8080 $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+            docker run -d --name app -e AWS__SecretManager=${{ secrets.AWS__SecretManager }} -e AWS__AccessKey=${{ secrets.AWS__AccessKey }} -e AWS__SecretKey=${{ secrets.AWS__SecretKey }} -e AWS__Region=${{ secrets.AWS__Region }} -p 9090:9090 $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           "
