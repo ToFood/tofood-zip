@@ -17,23 +17,17 @@ string appSettingsPath = Path.Combine(Directory.GetCurrentDirectory(), "appsetti
 // Verifica se o arquivo appsettings.json existe
 if (!File.Exists(appSettingsPath))
 {
-
-    // Recupera as variáveis de ambiente ou define valores padrão
-    var secretManager = Environment.GetEnvironmentVariable("AWS__SecretManager");
-    var accessKey = Environment.GetEnvironmentVariable("AWS__AccessKey");
-    var secretKey = Environment.GetEnvironmentVariable("AWS__SecretKey");
-    var region = Environment.GetEnvironmentVariable("AWS__Region");
-
     // Cria o arquivo appsettings.json com valores padrão
     var defaultConfig = $@"
-            {{
-                ""AWS"": {{
-                    ""SecretManager"": ""{secretManager}"",
-                    ""AccessKey"": ""{accessKey}"",
-                    ""SecretKey"": ""{secretKey}"",
-                    ""Region"": ""{region}""
-                }}
-            }}";
+    {{
+        ""AWS"": {{
+            ""SecretManager"": ""{Environment.GetEnvironmentVariable("AWS__SecretManager")}"",
+            ""AccessKey"": ""{Environment.GetEnvironmentVariable("AWS__AccessKey")}"",
+            ""SecretKey"": ""{Environment.GetEnvironmentVariable("AWS__SecretKey")}"",
+            ""Region"": ""{Environment.GetEnvironmentVariable("AWS__Region")}""
+        }}
+    }}";
+
     File.WriteAllText(appSettingsPath, defaultConfig);
     Console.WriteLine($"Arquivo appsettings.json criado em: {appSettingsPath}");
 }

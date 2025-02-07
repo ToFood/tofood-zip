@@ -23,17 +23,19 @@ public class SecretsHelper
     {
         try
         {
+            Console.WriteLine($"SecretManager ENV: {Environment.GetEnvironmentVariable("AWS__SecretManager")} | SecretManager Configuration: {configuration["AWS:SecretManager"]}");
+
             // Criar cliente do Secrets Manager usando as credenciais do appsettings.json
             var secretsClient = new AmazonSecretsManagerClient(
                 new BasicAWSCredentials(
-                    configuration["AWS:AccessKey"],
-                    configuration["AWS:SecretKey"]
+                    configuration["AWS:AccessKey"] ?? Environment.GetEnvironmentVariable("AWS__AccessKey"),
+                    configuration["AWS:SecretKey"] ?? Environment.GetEnvironmentVariable("AWS__SecretKey")
                 ),
-                RegionEndpoint.GetBySystemName(configuration["AWS:Region"] ?? "us-east-1")
+                RegionEndpoint.GetBySystemName(configuration["AWS:Region"] ?? Environment.GetEnvironmentVariable("AWS__Region") ??  "us-east-1")
             );
 
             // Recuperar o nome do segredo do appsettings.json
-            var secretName = configuration["AWS:SecretManager"];
+            var secretName = configuration["AWS:SecretManager"] ?? Environment.GetEnvironmentVariable("AWS__SecretManager");
             if (string.IsNullOrEmpty(secretName))
             {
                 throw new ApplicationException("O nome do segredo não foi configurado em 'AWS:SecretManager' no appsettings.json.");
