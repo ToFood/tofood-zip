@@ -147,7 +147,7 @@ jobs:
           AWS_SecretManager: ${{ secrets.AWS_SecretManager }}
           AWS_AccessKey: ${{ secrets.AWS_AccessKey }}
           AWS_SecretKey: ${{ secrets.AWS_SecretKey }}
-          AWS_Region: ${{ secrets.AWS_Region 
+          AWS_Region: ${{ secrets.AWS_Region }}
           ASPNETCORE_HTTP_PORTS: ${{ secrets.ASPNETCORE_HTTP_PORTS }}
         run: |
           echo "$SSH_PRIVATE_KEY" > key.pem
