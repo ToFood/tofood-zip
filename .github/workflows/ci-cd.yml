@@ -87,40 +87,13 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-
-  api-dockers:
+        
+  configure-aws-credential:
     name: 🐋 -> 🌐 APIs
     runs-on: ubuntu-latest
     needs: [unitary-test, integration-test, system-test]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-
-    steps:
-      - name: Fazer checkout do repositório
-        uses: actions/checkout@v2
-
-  worker-dockers:
-    name: 🐋 -> 🤖 Workers
-    runs-on: ubuntu-latest
-    needs: [unitary-test, integration-test, system-test]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-
-    steps:
-      - name: Fazer checkout do repositório
-        uses: actions/checkout@v2
-
-  queue-dockers:
-    name: 🐋 -> 🐇 Queues
-    runs-on: ubuntu-latest
-    needs: [unitary-test, integration-test, system-test]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-
-    steps:
-      - name: Fazer checkout do repositório
-        uses: actions/checkout@v2
-
-  build-and-deploy:
-    runs-on: ubuntu-latest
-
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -132,15 +105,19 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
+  deploy-image:
+    name: 🐋 -> 🌐 APIs
+    runs-on: ubuntu-latest
+    needs: [unitary-test, integration-test, system-test, configure-aws-credential]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Fazer checkout do repositório
+        uses: actions/checkout@v3
+        
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
-
-      - name: Extrair variáveis do GitHub Secrets
-        run: |
-          set -e
-          echo '${{ secrets.AWS_CREDENTIALS_JSON }}' > aws_credentials.json
-          cat aws_credentials.json | jq -r 'to_entries|map("export \(.key)=\(.value|tostring)")|.[]' >> $GITHUB_ENV
 
       - name: Build, tag, and push image to Amazon ECR
         id: build-image
@@ -152,6 +129,14 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
+  deploy-project:
+    runs-on: ubuntu-latest
+    needs: [unitary-test, integration-test, system-test, deploy-image, configure-aws-credential]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
       - name: Deploy to EC2
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -159,10 +144,11 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: tofood-zip
           IMAGE_TAG: latest
-          AWS__SecretManager: ${{ secrets.AWS__SecretManager }}
-          AWS__AccessKey: ${{ secrets.AWS__AccessKey }}
-          AWS__SecretKey: ${{ secrets.AWS__SecretKey }}
-          AWS__Region: ${{ secrets.AWS__Region }}
+          AWS_SecretManager: ${{ secrets.AWS_SecretManager }}
+          AWS_AccessKey: ${{ secrets.AWS_AccessKey }}
+          AWS_SecretKey: ${{ secrets.AWS_SecretKey }}
+          AWS_Region: ${{ secrets.AWS_Region 
+          ASPNETCORE_HTTP_PORTS: ${{ secrets.ASPNETCORE_HTTP_PORTS }}
         run: |
           echo "$SSH_PRIVATE_KEY" > key.pem
           chmod 400 key.pem
@@ -171,5 +157,5 @@ jobs:
             docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
             docker stop app || true
             docker rm app || true
-            docker run -d --name app -e AWS__SecretManager=${{ secrets.AWS__SecretManager }} -e AWS__AccessKey=${{ secrets.AWS__AccessKey }} -e AWS__SecretKey=${{ secrets.AWS__SecretKey }} -e AWS__Region=${{ secrets.AWS__Region }} -p 9090:9090 $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+            docker run -d --name app -e AWS__SecretManager=${{ secrets.AWS_SecretManager }} -e AWS__AccessKey=${{ secrets.AWS_AccessKey }} -e AWS__SecretKey=${{ secrets.AWS_SecretKey }} -e AWS__Region=${{ secrets.AWS_Region }} -e ASPNETCORE_HTTP_PORTS=${{ secrets.ASPNETCORE_HTTP_PORTS }} -p 9090:9090 $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           "
